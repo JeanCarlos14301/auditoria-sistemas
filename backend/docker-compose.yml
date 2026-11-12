@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: auditsys_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: auditsys_user
+      POSTGRES_PASSWORD: auditsys_pass2026
+      POSTGRES_DB: auditsys_db
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/init_auditsys.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - auditsys_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auditsys_user -d auditsys_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  auditsys_pgdata:
