@@ -5,10 +5,11 @@ Sistema para planificar, ejecutar y cerrar auditorías de seguridad de la inform
 | Carpeta | Contenido | Estado |
 |---|---|---|
 | [backend/](backend/) | API REST (Node.js, TypeScript, Express, PostgreSQL) | Completo · suite QA CP-01 a CP-13 aprobada |
-| `frontend/` | Interfaz web (Vite, `http://localhost:5173`) | Pendiente |
+| [frontend/](frontend/) | Interfaz web (React, Vite, `http://localhost:5173`) | En curso · pantallas de trabajo y de revisión y cierre |
 
 - Instalación y arquitectura del backend: [backend/README.md](backend/README.md)
 - Contrato de la API para el Frontend: [backend/API.md](backend/API.md)
+- Puesta en marcha y reglas del frontend: [frontend/README.md](frontend/README.md)
 
 ## Inicio rápido
 
@@ -19,4 +20,12 @@ cp .env.example .env
 npm run db:up
 npm run dev          # http://localhost:3000/api
 npm run test:qa      # en otra terminal
+```
+
+Con la API en marcha, el frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev          # http://localhost:5173
 ```
