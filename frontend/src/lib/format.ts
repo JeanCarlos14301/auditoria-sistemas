@@ -31,3 +31,11 @@ export const MSG_CP04 = 'CP-04: Las observaciones analíticas son obligatorias p
 export const MSG_CP05 = 'CP-05: Debe justificar explícitamente la exclusión de un control marcado como No Aplicable.';
 /** Longitud mínima que la API exige a observaciones y justificación. */
 export const MIN_TEXTO_EVALUACION = 5;
+
+/** Comprobaciones del informe que devuelve la verificación de integridad (`informe.checks`). */
+export const NOMBRE_CHECK: Record<string, string> = {
+  eslabon_cierre_presente: 'El eslabón de cierre existe',
+  eslabon_cierre_es_ultimo: 'El cierre es el último eslabón',
+  snapshot_integro: 'El snapshot del informe no se ha alterado',
+  metricas_consistentes: 'Las métricas coinciden con las selladas',
+};

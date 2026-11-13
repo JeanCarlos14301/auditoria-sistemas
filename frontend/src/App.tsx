@@ -3,6 +3,7 @@ import { RutaPrivada } from './auth/AuthContext';
 import { Marco } from './components/Barra';
 import Auditorias from './pages/Auditorias';
 import Cierre from './pages/Cierre';
+import Informe from './pages/Informe';
 import Login from './pages/Login';
 import NuevaAuditoria from './pages/NuevaAuditoria';
 import Trabajo from './pages/Trabajo';
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/auditorias/nueva" element={<NuevaAuditoria />} />
           <Route path="/auditorias/:id" element={<Trabajo />} />
           <Route path="/auditorias/:id/cierre" element={<Cierre />} />
+          <Route path="/auditorias/:id/informe" element={<Informe />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/auditorias" replace />} />

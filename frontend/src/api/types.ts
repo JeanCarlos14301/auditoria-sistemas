@@ -187,8 +187,24 @@ export interface CrearEvidenciaInput { descripcion: string; fuente: FuenteEviden
 export interface CrearHallazgoInput { condicion: string; criterio?: string | null; causa: string; efecto_riesgo: string; severidad: Nivel }
 export interface CrearRecomendacionInput { descripcion: string; prioridad: Nivel; plazo_estimado: string }
 
+/**
+ * La copia de la auditoría que se selló al cerrar (`informe.snapshot_json`). El informe impreso sale de aquí,
+ * no del detalle: es lo que cubre la comprobación `snapshot_integro`.
+ */
+export interface SnapshotInforme {
+  version_snapshot: number;
+  auditoria: Auditoria & { auditor_nombre: string };
+  cerrado_por: { id: number; nombre: string; rol: Rol };
+  fecha_cierre: string;
+  marco_normativo: string[];
+  metricas: ResumenMetricas;
+  evaluaciones: Evaluacion[];
+  hash_cadena_previo: string;
+}
+export interface InformeSellado extends Informe { snapshot_json: SnapshotInforme }
+
 /** GET /auditorias/:id/informe (solo con la auditoría cerrada). */
-export interface InformeConVerificacion { informe: Informe; verificacion: Omit<VerificacionIntegridad, 'eslabones' | 'algoritmo' | 'hash_final' | 'id_auditoria'> }
+export interface InformeConVerificacion { informe: InformeSellado; verificacion: Omit<VerificacionIntegridad, 'eslabones' | 'algoritmo' | 'hash_final' | 'id_auditoria'> }
 
 export interface CrearAuditoriaInput { organizacion: string; alcance: string; fecha_inicio: string; fecha_fin: string }
 /** POST /auditorias/:id/alcance */

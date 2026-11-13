@@ -10,7 +10,7 @@ import { MantenerParaSellar } from '../components/MantenerParaSellar';
 import { Postura } from '../components/Postura';
 import { Sello, textoOrla } from '../components/Sello';
 import { SelloRelieve } from '../components/SelloRelieve';
-import { ANOMALIA, NOMBRE_EVALUACION, fecha, hora, pct, plural } from '../lib/format';
+import { ANOMALIA, NOMBRE_EVALUACION, fecha, hora, pct, plural, NOMBRE_CHECK } from '../lib/format';
 import { nodosDe, tramosVivos, trazaCompleta } from '../lib/traza';
 import { cascada } from '../motion/efectos';
 import { EASE, prefersReducedMotion, reentrar, tween } from '../motion/motion';
@@ -35,13 +35,6 @@ export default function Cierre() {
 const P_SELLO_INICIO = 0.42, P_SELLO_TRAMO = 0.42, MS_CIERRE = 2600;
 
 type FormAbierto = { idEvaluacion: number; tipo: TipoAnomalia; idHallazgo?: number };
-const NOMBRE_CHECK: Record<string, string> = {
-  eslabon_cierre_presente: 'El eslabón de cierre existe',
-  eslabon_cierre_es_ultimo: 'El cierre es el último eslabón',
-  snapshot_integro: 'El snapshot del informe no se ha alterado',
-  metricas_consistentes: 'Las métricas coinciden con las selladas',
-};
-
 function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   const { auditoria, evaluaciones } = datos;
   const cerrada = auditoria.estado === 'CERRADA';
@@ -239,6 +232,7 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
                       {v.informe && Object.entries(v.informe.checks).map(([k, ok]) => <FilaCheck key={k} nombre={NOMBRE_CHECK[k] ?? k} ok={ok} />)}
                     </dl>
                     <div className="fila-acc">
+                      <Link className="btn" to={`/auditorias/${id}/informe`}>Imprimir informe</Link>
                       <button className="btn sec" type="button" onClick={() => void verificar()} disabled={verificando}>{verificando ? 'Verificando…' : 'Verificar integridad'}</button>
                       <Link className="enlace" to="/auditorias">Volver a las auditorías</Link>
                     </div>

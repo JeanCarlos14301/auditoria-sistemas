@@ -36,8 +36,9 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
 | `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas y postura por atributo |
 | `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control, la puerta de cierre, el sello de integridad y, ya cerrada, la historia de la auditoría |
+| `/auditorias/:id/informe` | **Informe para imprimir** (RF08), solo con la auditoría cerrada: las hojas A4 tal como salen, con la huella del informe al pie de cada una |
 
-Pendiente: vista de impresión del informe (RF08). El panel (RF09) se cubre con las métricas de cada auditoría.
+El panel (RF09) se cubre con las métricas de cada auditoría.
 
 ## Reglas que respeta el código
 
@@ -46,6 +47,7 @@ Pendiente: vista de impresión del informe (RF08). El panel (RF09) se cubre con 
 - **Cerrar no tiene vuelta atrás.** Hay que mantener pulsado el botón (también con movimiento reducido) o usar la confirmación en dos pasos.
 - **Un 401 cierra la sesión.** El cliente borra el token y avisa a `AuthProvider`, que lleva al login. El token vive en `sessionStorage` y la sesión se restaura con `GET /auth/me`.
 - **Validación también en el cliente (RNF03).** Los formularios no envían la petición si falta un campo obligatorio; CP-04 y CP-05 usan el mismo texto que la API. El servidor valida igualmente.
+- **El informe impreso sale de la copia sellada.** Se compone con `informe.snapshot_json` (lo que se selló al cerrar) y con la verificación de integridad recién hecha, no con el detalle. Si la verificación falla se puede imprimir igualmente, pero cada hoja sale marcada como «No íntegro».
 - **Solo lectura al cerrar.** Una auditoría `CERRADA` redirige al acta y no muestra acciones de edición.
 - **Móvil primero (RNF01).** Todo se prueba a 360 px de ancho, sin scroll horizontal.
 
@@ -76,6 +78,10 @@ Cada librería hace una cosa (`src/motion/gsap.ts`, `src/motion/efectos.ts`):
 | Motion | Resortes con velocidad: sacudida de error, indicador de pestañas, vuelta del botón de sellar |
 | three.js | El sello en relieve. 125 kB comprimidos en un trozo aparte que solo se descarga al acercarse al sello de un acta cerrada |
 
+### Impresión
+
+La vista del informe enseña en pantalla las mismas hojas que se imprimen: cada una mide 794 × 1123 px (A4 a 96 ppp) y se escala con `--s` para caber. `src/lib/paginar.ts` reparte los bloques en hojas a partir de sus alturas medidas (los títulos no se quedan solos y las cabeceras de tabla se repiten), y `src/styles/informe.css` trae la hoja de estilos de impresión: fuera la interfaz, una hoja por página y sin los márgenes del navegador. «Imprimir o guardar PDF» abre el diálogo del navegador.
+
 `src/assets/bitacoraEjemplo.ts` es la bitácora (tipos de evento y hashes) de una auditoría de prueba local: la usa el sello de la entrada, donde todavía no hay sesión.
 
 ## Estructura
@@ -85,9 +91,9 @@ src/
   api/          tipos del contrato, cliente HTTP (ApiError, 401), endpoints y consultas
   auth/         sesión (AuthProvider) y rutas privadas
   motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP y gestos comunes
-  lib/          formato, lógica de la traza, geometría del sello e historia de la auditoría (con tests)
-  components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura
-  pages/        Login, Auditorias, NuevaAuditoria, Alcance, Trabajo, Cierre
+  lib/          formato, lógica de la traza, geometría del sello, historia de la auditoría y paginador (con tests)
+  components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura, contenido del informe
+  pages/        Login, Auditorias, NuevaAuditoria, Alcance, Trabajo, Cierre, Informe
   styles/       tokens y estilos por pantalla
   assets/       bitácora de ejemplo para el sello de la entrada
 ```

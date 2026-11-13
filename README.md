@@ -5,7 +5,7 @@ Sistema para planificar, ejecutar y cerrar auditorías de seguridad de la inform
 | Carpeta | Contenido | Estado |
 |---|---|---|
 | [backend/](backend/) | API REST (Node.js, TypeScript, Express, PostgreSQL) | Completo · suite QA CP-01 a CP-13 aprobada |
-| [frontend/](frontend/) | Interfaz web (React, Vite, `http://localhost:5173`) | En curso · todo el flujo de la auditoría; falta la vista de impresión del informe |
+| [frontend/](frontend/) | Interfaz web (React, Vite, `http://localhost:5173`) | Todo el flujo de la auditoría, del alcance al informe impreso |
 
 - Instalación y arquitectura del backend: [backend/README.md](backend/README.md)
 - Contrato de la API para el Frontend: [backend/API.md](backend/API.md)

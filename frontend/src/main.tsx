@@ -14,6 +14,7 @@ import './styles/entrada.css';
 import './styles/listado.css';
 import './styles/alcance.css';
 import './styles/propuestas.css';
+import './styles/informe.css';
 import './styles/utilidades.css';
 import { ApiError } from './api/client';
 import { AuthProvider } from './auth/AuthContext';
