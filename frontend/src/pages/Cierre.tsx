@@ -1,13 +1,18 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuditoria, useCambiarEstado, useInforme, useIntegridad, useTrazabilidad } from '../api/queries';
 import type { Anomalia, AuditoriaDetalle, Evaluacion, TipoAnomalia, VerificacionIntegridad } from '../api/types';
 import { Estados, Marca, MensajeError } from '../components/basicos';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
 import { FormEvidencia, FormHallazgo, FormRecomendacion } from '../components/Formularios';
-import { Sello } from '../components/Sello';
+import { Historia } from '../components/Historia';
+import { MantenerParaSellar } from '../components/MantenerParaSellar';
+import { Postura } from '../components/Postura';
+import { Sello, textoOrla } from '../components/Sello';
+import { SelloRelieve } from '../components/SelloRelieve';
 import { ANOMALIA, NOMBRE_EVALUACION, fecha, hora, pct, plural } from '../lib/format';
 import { nodosDe, tramosVivos, trazaCompleta } from '../lib/traza';
+import { cascada } from '../motion/efectos';
 import { EASE, prefersReducedMotion, reentrar, tween } from '../motion/motion';
 
 export default function Cierre() {
@@ -58,7 +63,16 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
 
   const [abierto, setAbierto] = useState<FormAbierto | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  /** Sube cuando la API rechaza el cierre: el botón de mantener vuelve a cero. */
+  const [reinicio, setReinicio] = useState(0);
+  /** Las trazas se dibujan al abrir la hoja, fila a fila. */
+  const [dibujada, setDibujada] = useState(false), [entrando, setEntrando] = useState(true);
+  useEffect(() => { if (filas.current) cascada(filas.current.querySelectorAll('.fila'), 40); }, []);
+  useEffect(() => { const a = requestAnimationFrame(() => setDibujada(true)), t = window.setTimeout(() => setEntrando(false), 1800); return () => { cancelAnimationFrame(a); clearTimeout(t); }; }, []);
+  /** El gesto de mantener enciende los trazos del sello: el JS solo escribe --h. */
+  const gesto = useCallback((h: number) => { acta.current?.style.setProperty('--h', h.toFixed(4)); }, []);
   const [verificando, setVerificando] = useState(false);
+  const [recompuesto, setRecompuesto] = useState(0);
 
   // Al registrar algo, la señal baja por el margen desde la fila hasta la puerta de cierre.
   const filaResuelta = useRef<number | null>(null);
@@ -100,8 +114,8 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
     setConfirmando(false); setAbierto(null);
     cambiar.mutate('CERRADA', {
       // Llega aquí con el detalle y la bitácora ya recargados (incluido el eslabón de cierre).
-      onSuccess: () => { setFase('cerrando'); cancelar.current = tween(0, 1, MS_CIERRE, progreso, () => setFase('cerrada')); },
-      onError: () => { void traz.refetch(); },
+      onSuccess: () => { setFase('cerrando'); cancelar.current = tween(0, 1, MS_CIERRE, progreso, () => { setFase('cerrada'); gesto(0); }); },
+      onError: () => { setReinicio(x => x + 1); void traz.refetch(); },
     });
   };
 
@@ -111,7 +125,7 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
     setVerificando(false);
     const v = r.data;
     if (!v) return;
-    cancelar.current();
+    cancelar.current(); setRecompuesto(x => x + 1);
     // Íntegra: el anillo se recorre entero. Rota: se detiene en el último eslabón que se pudo verificar.
     const hasta = v.integra ? 1 : P_SELLO_INICIO + P_SELLO_TRAMO * (v.cadena.eslabones_verificados / Math.max(1, v.cadena.total_eslabones));
     cancelar.current = tween(P_SELLO_INICIO, hasta, v.integra ? 1100 : 700, progreso, () => { progreso(1); reentrar(resultado.current); });
@@ -123,8 +137,14 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   const v: VerificacionIntegridad | undefined = integ.data;
   const inf = informe.data?.informe;
   const sellada = fase === 'cerrada' && cerrada;
+  const tipos = useMemo(() => (eslabones ?? []).map(e => e.tipo_evento), [eslabones]);
+  const nombres = useMemo(() => Object.fromEntries(evaluaciones.map(e => [e.control.codigo_iso, e.control.nombre])), [evaluaciones]);
+  const fechaCierre = cerrada && inf ? inf.fecha_generacion.slice(0, 10) : null;
+  const cifra = cerrada && inf ? pct(Number(inf.cumplimiento_pct)) : null;
+  const selloPlano = <Sello eslabones={eslabones ?? []} verificacion={cerrada && v ? v : null} cifra={cifra} fechaCierre={fechaCierre} idNuevo={idNuevo} />;
 
   return (
+    <div className="pila">
     <div className={`acta${apta || cerrada ? ' apta' : ''}`} ref={acta} data-estado={auditoria.estado} style={{ '--n': evaluaciones.length } as React.CSSProperties}>
       <div className="hoja">
         <header className="hoja-cab">
@@ -139,7 +159,7 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
 
         <div className="hoja-cuerpo">
           <div className="hoja-cols" aria-hidden="true"><span>Control</span><span /><span>Estado</span><div className="traza-cols"><span>Evidencia</span><span>Hallazgo</span><span>Recomendación</span><span /></div></div>
-          <ol className="hoja-filas" ref={filas}>
+          <ol className={`hoja-filas${dibujada ? ' dibujada' : ''}${entrando ? ' entrando' : ''}`} ref={filas}>
             {evaluaciones.map((e, i) => {
               const nodos = nodosDe(e), vivos = tramosVivos(nodos), anoms = anomaliasDe(e);
               return (
@@ -157,9 +177,9 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
                       <div className="msg" key={`${a.tipo}-${a.id_hallazgo ?? 0}`}>
                         <span>{a.mensaje}</span>
                         {!esEste && <button className="btn sec min" type="button" onClick={() => setAbierto({ idEvaluacion: e.id, tipo: a.tipo, idHallazgo: a.id_hallazgo })}>{ANOMALIA[a.tipo].accion}</button>}
-                        {esEste && a.tipo === 'CP-06_DISONANCIA_PROBATORIA' && <FormEvidencia idAuditoria={id} idEvaluacion={e.id} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} />}
-                        {esEste && a.tipo === 'CONTROL_SIN_HALLAZGO' && <FormHallazgo idAuditoria={id} idEvaluacion={e.id} criterio={e.control.criterio_evaluacion} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} />}
-                        {esEste && a.tipo === 'CP-08_HALLAZGO_HUERFANO' && a.id_hallazgo !== undefined && <FormRecomendacion idAuditoria={id} idHallazgo={a.id_hallazgo} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} />}
+                        {esEste && a.tipo === 'CP-06_DISONANCIA_PROBATORIA' && <FormEvidencia idAuditoria={id} idEvaluacion={e.id} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={() => filas.current?.querySelector(`[data-id="${e.id}"] .tramo[data-n="falta"] .nodo`) ?? null} />}
+                        {esEste && a.tipo === 'CONTROL_SIN_HALLAZGO' && <FormHallazgo idAuditoria={id} idEvaluacion={e.id} criterio={e.control.criterio_evaluacion} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={() => filas.current?.querySelector(`[data-id="${e.id}"] .tramo[data-n="falta"] .nodo`) ?? null} />}
+                        {esEste && a.tipo === 'CP-08_HALLAZGO_HUERFANO' && a.id_hallazgo !== undefined && <FormRecomendacion idAuditoria={id} idHallazgo={a.id_hallazgo} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={() => filas.current?.querySelector(`[data-id="${e.id}"] .tramo[data-n="falta"] .nodo`) ?? null} />}
                       </div>
                     );
                   })}
@@ -172,7 +192,7 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
           <div className="platina" />
         </div>
 
-        <footer className="hoja-pie">
+        <footer className={`hoja-pie${sellada ? ' sellada' : ''}`}>
           <div className="pie-txt">
             {!sellada ? (
               <div>
@@ -190,7 +210,9 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
                       </>
                     ) : (
                       <>
-                        <button className="btn" type="button" disabled={!apta || cambiar.isPending} onClick={() => setConfirmando(true)}>{cambiar.isPending ? 'Cerrando…' : 'Cerrar auditoría'}</button>
+                        {/* Cerrar no tiene vuelta atrás: hay que mantener el botón. Mientras, el sello se va completando. */}
+                        <MantenerParaSellar etiqueta={cambiar.isPending ? 'Cerrando…' : 'Mantén pulsado para cerrar'} disabled={!apta || cambiar.isPending} onProgreso={gesto} onCompleto={cerrar} reinicio={reinicio} />
+                        {apta && <button className="enlace" type="button" onClick={() => setConfirmando(true)}>Cerrar sin mantener</button>}
                         <Link className="enlace" to={`/auditorias/${id}`}>Volver a la evaluación</Link>
                       </>
                     )}
@@ -225,15 +247,18 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
               </div>
             )}
           </div>
-          <Sello
-            eslabones={eslabones ?? []}
-            verificacion={cerrada && v ? v : null}
-            cifra={cerrada && inf ? pct(Number(inf.cumplimiento_pct)) : null}
-            fechaCierre={cerrada && inf ? inf.fecha_generacion.slice(0, 10) : null}
-            idNuevo={idNuevo}
-          />
+          {sellada && v && inf
+            ? <SelloRelieve tipos={tipos} hashFinal={v.hash_final} cifra={cifra ?? ''} orla={textoOrla(v, fechaCierre)} ruptura={v.integra ? null : v.cadena.ruptura?.posicion ?? null} pulso={recompuesto}>{selloPlano}</SelloRelieve>
+            : selloPlano}
         </footer>
       </div>
+    </div>
+    {sellada && eslabones && inf && (
+      <>
+        <Historia eslabones={eslabones} nombres={nombres} titulo={`Historia de la auditoría n.º ${auditoria.id}`} cifra={cifra ?? ''} orla={v ? textoOrla(v, fechaCierre) : ''} />
+        <Postura evaluaciones={evaluaciones} />
+      </>
+    )}
     </div>
   );
 }

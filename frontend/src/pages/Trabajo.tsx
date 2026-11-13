@@ -1,12 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useAuditoria, useCambiarEstado, useEvaluar } from '../api/queries';
 import type { AuditoriaDetalle, EstadoEvaluacion, Evaluacion, ResumenMetricas } from '../api/types';
 import { Campo, Estados, Marca, MensajeError, conError } from '../components/basicos';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
+import { Postura } from '../components/Postura';
 import { FormEvidencia, FormHallazgo, FormRecomendacion } from '../components/Formularios';
 import { ESTADOS_EVALUACION, MIN_TEXTO_EVALUACION, MSG_CP04, MSG_CP05, NOMBRE_ESTADO, NOMBRE_EVALUACION, NOMBRE_FUENTE, NOMBRE_NIVEL, fecha, hora, pct } from '../lib/format';
 import { CountUp } from '../motion/CountUp';
+import { cascada, sacudir } from '../motion/efectos';
+import { Alcance } from './Alcance';
 
 export default function Trabajo() {
   const id = Number(useParams().id);
@@ -16,13 +19,8 @@ export default function Trabajo() {
   const { estado } = q.data.auditoria;
   // Una auditoría cerrada es de solo lectura: su vista es el acta con el sello.
   if (estado === 'CERRADA') return <Navigate to={`/auditorias/${id}/cierre`} replace />;
-  if (estado === 'BORRADOR') return (
-    <div className="prosa">
-      <h1 className="titulo-pagina">{q.data.auditoria.organizacion}</h1>
-      <p><b>Esta auditoría está en Borrador.</b> Antes de evaluarla hay que definir su alcance, entre 10 y 15 controles. Esa pantalla todavía no está implementada.</p>
-      <p><Link className="enlace" to="/auditorias">Volver a las auditorías</Link></p>
-    </div>
-  );
+  // En Borrador todavía no hay nada que evaluar: la hoja se abre en su alcance.
+  if (estado === 'BORRADOR') return <Alcance id={id} datos={q.data} />;
   return <Vista id={id} datos={q.data} />;
 }
 
@@ -35,8 +33,12 @@ function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   const actual = evaluaciones.find(e => e.id === sel) ?? evaluaciones[0]!;
   const cambiar = useCambiarEstado(id);
   const destino = auditoria.estado === 'EN_EJECUCION' ? 'EN_REVISION' : 'EN_EJECUCION';
+  const lista = useRef<HTMLElement>(null);
+  // Al entrar, los controles aparecen en cascada
+  useEffect(() => { if (lista.current) cascada(lista.current.querySelectorAll('.wk-item'), 35); }, []);
 
   return (
+    <div className="pila">
     <div className="wk">
       <header className="wk-cab">
         <div>
@@ -54,7 +56,7 @@ function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
         </div>
       </header>
       <div className="wk-cuerpo">
-        <nav className="wk-lista" aria-label="Controles del alcance">
+        <nav className="wk-lista" ref={lista} aria-label="Controles del alcance">
           {evaluaciones.map(e => (
             <button key={e.id} type="button" className={`wk-item${sinEvaluar(e) ? ' pend' : ''}`} aria-current={e.id === actual.id} onClick={() => setSel(e.id)}>
               <Marca estado={e.estado} /><span className="cod">{e.control.codigo_iso}</span><span className="nom">{e.control.nombre}</span>
@@ -68,6 +70,8 @@ function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
         <Detalle key={actual.id} idAuditoria={id} ev={actual} />
         <Metricas m={metricas} evaluaciones={evaluaciones} />
       </div>
+    </div>
+    <Postura evaluaciones={evaluaciones} />
     </div>
   );
 }
@@ -122,6 +126,8 @@ function FormEvaluacion({ idAuditoria, ev }: { idAuditoria: number; ev: Evaluaci
   const [obs, setObs] = useState(ev.observaciones ?? '');
   const [na, setNa] = useState(ev.justificacion_na ?? '');
   const [local, setLocal] = useState<{ campo: 'obs' | 'na'; msg: string } | null>(null);
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => { if (local || m.isError) sacudir(form.current); }, [local, m.isError]);
   const i = ESTADOS_EVALUACION.indexOf(estado);
   const pideObs = estado === 'PARCIALMENTE_IMPLEMENTADO' || estado === 'NO_IMPLEMENTADO';
   const pideNa = estado === 'NO_APLICABLE';
@@ -140,7 +146,7 @@ function FormEvaluacion({ idAuditoria, ev }: { idAuditoria: number; ev: Evaluaci
   };
 
   return (
-    <form className="wk-form" onSubmit={enviar} noValidate>
+    <form className="wk-form" ref={form} onSubmit={enviar} noValidate>
       <fieldset>
         <legend>Estado de la evaluación</legend>
         <div className="seg" style={{ '--i': i, '--c': i % 2, '--f': i >> 1 } as React.CSSProperties}>

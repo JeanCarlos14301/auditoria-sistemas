@@ -1,15 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { tween } from './motion';
 
-interface Props { valor: number; formato: (n: number) => string; decimales?: number; ms?: number; className?: string }
+interface Props {
+  valor: number;
+  formato: (n: number) => string;
+  decimales?: number;
+  ms?: number;
+  className?: string;
+  /** Valor desde el que cuenta la primera vez. Sin él, la primera vez aparece ya en `valor`. */
+  desde?: number;
+}
 
 /**
  * Muestra una cifra que cuenta desde el valor anterior hasta el nuevo.
  * El último fotograma escribe exactamente `valor`, que es el que envía la API: nunca se recalcula ni se redondea de más.
  */
-export function CountUp({ valor, formato, decimales = 1, ms = 600, className }: Props) {
-  const [visto, setVisto] = useState(valor);
-  const anterior = useRef(valor);
+export function CountUp({ valor, formato, decimales = 1, ms = 600, className, desde }: Props) {
+  const [visto, setVisto] = useState(desde ?? valor);
+  const anterior = useRef(desde ?? valor);
   useEffect(() => {
     const de = anterior.current;
     anterior.current = valor;

@@ -4,6 +4,7 @@ import { Marco } from './components/Barra';
 import Auditorias from './pages/Auditorias';
 import Cierre from './pages/Cierre';
 import Login from './pages/Login';
+import NuevaAuditoria from './pages/NuevaAuditoria';
 import Trabajo from './pages/Trabajo';
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
       <Route element={<RutaPrivada />}>
         <Route element={<Marco />}>
           <Route path="/auditorias" element={<Auditorias />} />
+          <Route path="/auditorias/nueva" element={<NuevaAuditoria />} />
           <Route path="/auditorias/:id" element={<Trabajo />} />
           <Route path="/auditorias/:id/cierre" element={<Cierre />} />
         </Route>

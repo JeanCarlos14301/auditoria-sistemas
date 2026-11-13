@@ -4,6 +4,8 @@ Interfaz web de AuditA. Consume la API de [`backend/`](../backend/) siguiendo su
 
 **Stack:** React 18 · Vite 6 · TypeScript · Tailwind 3 · React Router 6 · TanStack Query 5
 
+**Movimiento:** GSAP 3.15 · anime.js 4.5 · Motion 14 · three.js r170 (solo el sello en relieve, en diferido)
+
 ## Puesta en marcha
 
 Requiere el backend levantado en `http://localhost:3000/api` (ver [backend/README.md](../backend/README.md)).
@@ -26,19 +28,22 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 
 ## Qué hay implementado
 
-| Ruta | Pantalla | Estado |
-|---|---|---|
-| `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas | Diseño aprobado |
-| `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control, la puerta de cierre y el sello de integridad | Diseño aprobado |
-| `/login` | Inicio de sesión | Funcional, diseño pendiente |
-| `/auditorias` | Listado | Funcional, diseño pendiente |
+| Ruta | Pantalla |
+|---|---|
+| `/login` | **Entrar**: junto al formulario, un sello se compone eslabón a eslabón con una bitácora de ejemplo |
+| `/auditorias` | **Índice**: filtro por estado y orden, con las filas recolocándose; cada fila dibuja su paso por los estados y su cumplimiento |
+| `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
+| `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
+| `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas y postura por atributo |
+| `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control, la puerta de cierre, el sello de integridad y, ya cerrada, la historia de la auditoría |
 
-Pendientes: nueva auditoría (RF01), alcance con filtro y contador de 10 a 15 (RF02), panel (RF09) y vista de impresión del informe (RF08).
+Pendiente: vista de impresión del informe (RF08). El panel (RF09) se cubre con las métricas de cada auditoría.
 
 ## Reglas que respeta el código
 
-- **La API es la fuente de verdad.** El cumplimiento se muestra tal como llega; `CountUp` solo anima el paso del valor anterior al nuevo y termina exactamente en él. Si la auditoría se puede cerrar lo decide `GET /trazabilidad`, no el front.
-- **Tras cada mutación se recarga el detalle.** Todas las consultas de una auditoría cuelgan de la clave `['auditoria', id]` y cada mutación la invalida entera (`src/api/queries.ts`).
+- **La API es la fuente de verdad.** El cumplimiento se muestra tal como llega; `CountUp` solo anima hasta ese valor y termina exactamente en él. La historia de la auditoría tampoco calcula nada: reproduce lo que cada eslabón de la bitácora dejó escrito (`src/lib/historia.ts`). Si la auditoría se puede cerrar lo decide `GET /trazabilidad`, no el front.
+- **Tras cada mutación se recarga el detalle.** Todas las consultas de una auditoría cuelgan de la clave `['auditoria', id]` y cada mutación la invalida entera (`src/api/queries.ts`). Los formularios de registro la invalidan ellos mismos, cuando termina su animación de guardado.
+- **Cerrar no tiene vuelta atrás.** Hay que mantener pulsado el botón (también con movimiento reducido) o usar la confirmación en dos pasos.
 - **Un 401 cierra la sesión.** El cliente borra el token y avisa a `AuthProvider`, que lleva al login. El token vive en `sessionStorage` y la sesión se restaura con `GET /auth/me`.
 - **Validación también en el cliente (RNF03).** Los formularios no envían la petición si falta un campo obligatorio; CP-04 y CP-05 usan el mismo texto que la API. El servidor valida igualmente.
 - **Solo lectura al cerrar.** Una auditoría `CERRADA` redirige al acta y no muestra acciones de edición.
@@ -50,7 +55,7 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 
 - **Tokens** en `src/styles/tokens.css`: tema claro y oscuro, tipografía (Libre Franklin para el texto; Newsreader como acento, solo en la marca, el título de la hoja y la cifra de cumplimiento) y las dos curvas de movimiento.
 - **El eslabón que falta.** Cada control lleva su traza: evidencia, hallazgo y recomendación. Donde falta un eslabón, la línea se corta (`src/lib/traza.ts`).
-- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra.
+- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra. En el acta cerrada se dibuja en relieve con three.js (`src/components/SelloRelieve.tsx`); el sello plano se queda como respaldo mientras carga o si no hay WebGL.
 
 ### Movimiento
 
@@ -59,7 +64,19 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 - En movimiento continuo solo cambian `transform` y `opacity`.
 - Dos curvas: entrada `cubic-bezier(.16,1,.3,1)` y cambio de estado `cubic-bezier(.66,0,.1,1)`.
 - Con `prefers-reduced-motion` no hay animaciones: se muestra el estado final.
-- No hay librerías de animación: `src/motion/motion.ts` cubre lo que usan estas dos pantallas. Si una pantalla futura necesita scroll con pin, se añadirá GSAP ahí.
+- En móvil no hay pin ni parallax: la historia de la auditoría se recorre con un control deslizante.
+- Lo que está fuera de pantalla no se anima (el sello de la entrada y el relieve se pausan).
+
+Cada librería hace una cosa (`src/motion/gsap.ts`, `src/motion/efectos.ts`):
+
+| Librería | Para qué |
+|---|---|
+| GSAP | Recolocar filas (Flip), historia con pin y scrub (ScrollTrigger), texto por letras (SplitText), la llave del contador (DrawSVG), fichas que caen (Physics2D) |
+| anime.js | Entradas escalonadas, también en rejilla desde el centro, y la altura de los trazos del relieve (objetos planos) |
+| Motion | Resortes con velocidad: sacudida de error, indicador de pestañas, vuelta del botón de sellar |
+| three.js | El sello en relieve. 125 kB comprimidos en un trozo aparte que solo se descarga al acercarse al sello de un acta cerrada |
+
+`src/assets/bitacoraEjemplo.ts` es la bitácora (tipos de evento y hashes) de una auditoría de prueba local: la usa el sello de la entrada, donde todavía no hay sesión.
 
 ## Estructura
 
@@ -67,9 +84,10 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 src/
   api/          tipos del contrato, cliente HTTP (ApiError, 401), endpoints y consultas
   auth/         sesión (AuthProvider) y rutas privadas
-  motion/       curvas, helpers de movimiento reducido, tween de --p y CountUp
-  lib/          formato, lógica de la traza y geometría del sello (con tests)
-  components/   piezas comunes, formularios de registro, sello y marco de la app
-  pages/        Login, Auditorias, Trabajo, Cierre
+  motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP y gestos comunes
+  lib/          formato, lógica de la traza, geometría del sello e historia de la auditoría (con tests)
+  components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura
+  pages/        Login, Auditorias, NuevaAuditoria, Alcance, Trabajo, Cierre
   styles/       tokens y estilos por pantalla
+  assets/       bitácora de ejemplo para el sello de la entrada
 ```

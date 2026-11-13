@@ -15,6 +15,13 @@ interface Props {
   idNuevo: number | null;
 }
 
+/** El texto que rodea el sello: los datos de la verificación o, si la cadena está rota, dónde y por qué. */
+export function textoOrla(v: Pick<VerificacionIntegridad, 'algoritmo' | 'cadena'>, fechaCierre: string | null): string {
+  const r = v.cadena.ruptura;
+  return r ? `CADENA ALTERADA · RUPTURA EN EL ESLABÓN ${r.posicion} DE ${v.cadena.total_eslabones} · ${r.motivo} · `
+    : `AUDITA · ${v.algoritmo} · ${v.cadena.total_eslabones} ESLABONES · ISO/IEC 27002:2022${fechaCierre ? ` · ${fechaCierre}` : ''} · `;
+}
+
 /**
  * Sello de integridad. Su geometría sale de los datos: un trazo por eslabón (el largo depende del tipo de evento)
  * y una roseta generada con el hash final. Cuánto está "compuesto" lo decide el CSS a partir de --p, heredado de .acta.
@@ -25,9 +32,7 @@ export function Sello({ eslabones, verificacion, cifra, fechaCierre, idNuevo }: 
   const rota = verificacion ? !verificacion.integra : false;
   const ruptura = rota ? verificacion!.cadena.ruptura : null;
   const roseta = useMemo(() => (verificacion && fechaCierre ? rosetaDe(verificacion.hash_final) : []), [verificacion, fechaCierre]);
-  const orla = !verificacion ? ''
-    : ruptura ? `CADENA ALTERADA · RUPTURA EN EL ESLABÓN ${ruptura.posicion} DE ${verificacion.cadena.total_eslabones} · ${ruptura.motivo} · `
-    : `AUDITA · ${verificacion.algoritmo} · ${verificacion.cadena.total_eslabones} ESLABONES · ISO/IEC 27002:2022${fechaCierre ? ` · ${fechaCierre}` : ''} · `;
+  const orla = verificacion ? textoOrla(verificacion, fechaCierre) : '';
 
   return (
     <div className={`sello${rota ? ' rota' : ''}`}>

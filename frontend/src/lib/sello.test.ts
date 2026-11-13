@@ -27,3 +27,13 @@ describe('claseEvento', () => {
     expect(claseEvento('CREACION_AUDITORIA')).toBe('EST');
   });
 });
+
+describe('radiosDe', () => {
+  it('da tres curvas cerradas: el último radio coincide con el primero', async () => {
+    const { radiosDe, radiosLisos } = await import('./sello');
+    const r = radiosDe(H1, 90);
+    expect(r).toHaveLength(3);
+    for (const curva of r) { expect(curva).toHaveLength(91); expect(curva[90]).toBeCloseTo(curva[0]!, 6); }
+    expect(radiosLisos(90)[1]!.every(x => x === 58)).toBe(true);
+  });
+});

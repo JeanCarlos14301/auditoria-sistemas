@@ -1,6 +1,6 @@
 import { api } from './client';
 import type {
-  AuditoriaDetalle, AuditoriaListado, CambioEstado, CrearEvidenciaInput, CrearHallazgoInput, CrearRecomendacionInput,
+  AlcanceDefinido, Auditoria, AuditoriaDetalle, AuditoriaListado, CambioEstado, ControlISO, CrearAuditoriaInput, CrearEvidenciaInput, CrearHallazgoInput, CrearRecomendacionInput,
   DiagnosticoTrazabilidad, EstadoAuditoria, InformeConVerificacion, EvaluarControlInput, Evaluacion, Evidencia, Hallazgo, Recomendacion,
   SesionLogin, Usuario, VerificacionIntegridad,
 } from './types';
@@ -9,6 +9,9 @@ export const login = (email: string, password: string) => api<SesionLogin>('/aut
 export const yo = () => api<Usuario>('/auth/me');
 
 export const listarAuditorias = () => api<AuditoriaListado[]>('/auditorias');
+export const crearAuditoria = (body: CrearAuditoriaInput) => api<Auditoria>('/auditorias', { method: 'POST', body });
+export const controles = () => api<ControlISO[]>('/controles');
+export const definirAlcance = (id: number, ids_controles: number[]) => api<AlcanceDefinido>(`/auditorias/${id}/alcance`, { method: 'POST', body: { ids_controles } });
 export const detalleAuditoria = (id: number) => api<AuditoriaDetalle>(`/auditorias/${id}`);
 export const trazabilidad = (id: number) => api<DiagnosticoTrazabilidad>(`/auditorias/${id}/trazabilidad`);
 export const verificarIntegridad = (id: number) => api<VerificacionIntegridad>(`/auditorias/${id}/verificar-integridad`);

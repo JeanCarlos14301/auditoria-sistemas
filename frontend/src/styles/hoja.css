@@ -6,8 +6,7 @@
     --pc  0,84 → 1     aparecen la roseta, la cifra y el lema; el sello se asienta
   Los mismos límites están en P_SELLO_INICIO y P_SELLO_TRAMO (pages/Cierre.tsx).
 */
-.acta { --p: 0; --pa: clamp(0, calc(var(--p) / .5), 1); --pb: clamp(0, calc((var(--p) - .42) / .42), 1); --pc: clamp(0, calc((var(--p) - .84) / .16), 1); --n: 13; }
-.hoja { background: var(--surface); border: 1px solid var(--line); padding: clamp(16px, 4.2vw, 46px); display: grid; gap: 24px; min-width: 0; }
+.acta { --h: 0; --p: 0; --pa: clamp(0, calc(var(--p) / .5), 1); --pb: clamp(0, calc((var(--p) - .42) / .42), 1); --pc: clamp(0, calc((var(--p) - .84) / .16), 1); --n: 13; }
 .hoja-cab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 360px); gap: 16px 32px; align-items: end; }
 /* Titular por encima de 40 px: tracking negativo */
 .hoja-titulo { font-family: var(--f-acc); font-weight: 500; font-size: clamp(1.9rem, 4.4vw, 2.7rem); letter-spacing: -.012em; line-height: 1.08; }
@@ -44,6 +43,11 @@
 .toma::after { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: 0; transition: opacity 200ms linear; }
 .fila.completa .toma::after { opacity: 1; transition-delay: 600ms; }
 .acta.apta .fila.completa .toma::after { background: var(--accent); }
+/* Al abrir la hoja, las trazas se dibujan fila a fila (--i) y tramo a tramo (--k) */
+.hoja-filas:not(.dibujada) .tramo.on .hilo { transform: scaleX(0); }
+.hoja-filas:not(.dibujada) .tramo[data-n] .nodo { transform: scale(0); }
+.hoja-filas.entrando .tramo.on .hilo { transition-delay: calc(var(--k) * 150ms + var(--i) * 45ms); }
+.hoja-filas.entrando .tramo[data-n] .nodo { transition-delay: calc(var(--k) * 150ms + var(--i) * 45ms + 110ms); }
 /* El margen: se completa de arriba abajo cuando la auditoría es apta para cierre */
 .bus { position: absolute; top: 0; bottom: 0; right: 3px; width: 2px; background: var(--line); }
 .bus i { position: absolute; inset: 0; background: var(--accent); transform: scaleY(0); transform-origin: 50% 0; transition: transform 800ms var(--e-st); }
@@ -52,6 +56,8 @@
 .msg { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 26px 2px 0; color: var(--alert); }
 
 .hoja-pie { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 24px 44px; align-items: center; }
+/* Sellada: el sello en relieve necesita más sitio */
+.hoja-pie.sellada { grid-template-columns: minmax(0, 1fr) 300px; }
 .pie-txt { min-width: 0; }
 .pie-txt > div { display: grid; gap: 10px; }
 .resumen { display: flex; flex-wrap: wrap; gap: 2px 18px; color: var(--muted); }
@@ -65,14 +71,14 @@
 .sello { width: 220px; max-width: 100%; aspect-ratio: 1; justify-self: center; transform: scale(calc(1.1 - .1 * var(--pc))) rotate(calc((1 - var(--pc)) * -5deg)); }
 .sello svg { width: 100%; height: 100%; overflow: visible; }
 /* Abierta: trazos a media tinta. Al cerrar se fijan en orden (--k es la posición del trazo en el anillo). */
-.tick { stroke: var(--ink); stroke-width: 1.6; transform-box: view-box; transform-origin: 120px 120px; opacity: calc(.4 + .6 * clamp(0, calc((var(--pb) - var(--k)) * 40), 1)); transition: transform var(--d-move) var(--e-st), opacity 260ms linear; }
-.tick.t-EVA { stroke: var(--muted); }
-.tick.t-EVI { stroke: var(--ok); }
-.tick.t-HAL { stroke: var(--bad); }
-.tick.t-REC { stroke: var(--warn); }
-.tick.t-CIE { stroke: var(--accent); stroke-width: 3; opacity: clamp(.13, calc((var(--pb) - var(--k)) * 40), 1); }
-.tick.nuevo { opacity: 1; stroke-width: 3; }
-.roseta path { fill: none; stroke: var(--accent); stroke-width: .6; opacity: calc(var(--pc) * .8); }
+.sello .tick { stroke: var(--ink); stroke-width: 1.6; transform-box: view-box; transform-origin: 120px 120px; opacity: calc(.4 + .6 * clamp(0, calc((max(var(--pb), var(--h)) - var(--k)) * 40), 1)); transition: transform var(--d-move) var(--e-st), opacity 260ms linear; }
+.sello .tick.t-EVA { stroke: var(--muted); }
+.sello .tick.t-EVI { stroke: var(--ok); }
+.sello .tick.t-HAL { stroke: var(--bad); }
+.sello .tick.t-REC { stroke: var(--warn); }
+.sello .tick.t-CIE { stroke: var(--accent); stroke-width: 3; opacity: clamp(.13, calc((var(--pb) - var(--k)) * 40), 1); }
+.sello .tick.nuevo { opacity: 1; stroke-width: 3; }
+.sello .roseta path { fill: none; stroke: var(--accent); stroke-width: .6; opacity: calc(var(--pc) * .8); }
 .sello .disco { fill: var(--surface); opacity: var(--pc); }
 .sello .orla { font: 500 7.2px var(--f-mono); fill: var(--muted); opacity: var(--pc); }
 .sello .pct { font: 500 26px var(--f-acc); fill: var(--ink); text-anchor: middle; opacity: var(--pc); }
@@ -91,5 +97,5 @@
   .fila .est { grid-column: 2; color: var(--muted); }
   .fila .traza { grid-column: 1 / -1; margin-top: 4px; }
   .msg { padding-right: 0; }
-  .hoja-pie { grid-template-columns: 1fr; }
+  .hoja-pie, .hoja-pie.sellada { grid-template-columns: 1fr; }
 }

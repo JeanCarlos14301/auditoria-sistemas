@@ -1,0 +1,23 @@
+/* El sello animable (components/selloImperativo.ts): la entrada y la historia.
+   Un trazo por eslabón; la roseta cambia de forma con cada hash. Los colores, siempre de tokens. */
+.sv { aspect-ratio: 1; }
+.sv svg { width: 100%; height: 100%; overflow: visible; }
+.sv-tick { stroke: var(--ink); stroke-width: 1.6; transform-box: view-box; transform-origin: 120px 120px; transition: opacity 180ms linear; }
+.sv-tick.off { opacity: var(--sv-apagado, .1); }
+.sv-tick.t-EVA { stroke: var(--muted); }
+.sv-tick.t-EVI { stroke: var(--ok); }
+.sv-tick.t-HAL { stroke: var(--bad); }
+.sv-tick.t-REC { stroke: var(--warn); }
+.sv-tick.t-CIE { stroke: var(--accent); stroke-width: 3; }
+.sv .sv-tick.tras { opacity: .1; }
+.sv .sv-tick.ruptura { stroke: var(--alert); stroke-width: 3.6; opacity: 1; }
+.sv-roseta path { fill: none; stroke: var(--accent); stroke-width: .6; opacity: .5; transition: opacity 320ms linear; }
+.sv.sellado .sv-roseta path { opacity: .9; }
+.sv.rota .sv-roseta path { stroke: var(--alert); opacity: .55; }
+.sv-disco { fill: var(--surface); }
+.sv-orla { font: 500 7.2px var(--f-mono); fill: var(--muted); }
+.sv-pct { font: 500 26px var(--f-acc); fill: var(--ink); text-anchor: middle; }
+.sv-lema { font: 600 7.4px var(--f-text); letter-spacing: .14em; fill: var(--accent); text-anchor: middle; }
+.sv.rota .sv-lema { fill: var(--alert); }
+.sv-disco, .sv-orla, .sv-pct, .sv-lema { opacity: 0; transition: opacity 320ms linear; }
+.sv.sellado .sv-disco, .sv.sellado .sv-orla, .sv.sellado .sv-pct, .sv.sellado .sv-lema { opacity: 1; }

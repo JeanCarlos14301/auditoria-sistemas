@@ -1,0 +1,17 @@
+/* Entrar: la marca, el formulario y el sello componiéndose en directo */
+.entrar { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 28px 48px; align-items: center; margin-top: 3vh; }
+.entrar-form { display: grid; gap: 14px; max-width: 380px; }
+/* Fuente de acento como remate de marca. Titular por encima de 40 px: tracking negativo. */
+.marca-grande { font-family: var(--f-acc); font-weight: 500; font-size: clamp(3.2rem, 9vw, 5.2rem); line-height: 1; letter-spacing: -.022em; overflow: hidden; padding-bottom: .06em; }
+.marca-grande + .sub { margin-top: 8px; }
+/* El botón sigue al cursor dentro de este cerco (solo con puntero fino) */
+.zona-iman { display: inline-grid; padding: 10px; margin: -10px; }
+.vivo { display: grid; gap: 12px; justify-items: center; min-width: 0; }
+.vivo .sv { width: min(100%, 300px); --sv-apagado: 0; }
+.ticker { font-size: 12.5px; color: var(--muted); text-align: center; min-height: 3em; max-width: 300px; }
+.ticker b { color: var(--ink); font-weight: 600; }
+@media (max-width: 760px) {
+  .entrar { grid-template-columns: 1fr; margin-top: 0; }
+  .entrar > :last-child { order: -1; }
+  .vivo .sv { width: 220px; }
+}

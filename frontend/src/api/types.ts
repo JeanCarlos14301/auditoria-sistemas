@@ -189,3 +189,7 @@ export interface CrearRecomendacionInput { descripcion: string; prioridad: Nivel
 
 /** GET /auditorias/:id/informe (solo con la auditoría cerrada). */
 export interface InformeConVerificacion { informe: Informe; verificacion: Omit<VerificacionIntegridad, 'eslabones' | 'algoritmo' | 'hash_final' | 'id_auditoria'> }
+
+export interface CrearAuditoriaInput { organizacion: string; alcance: string; fecha_inicio: string; fecha_fin: string }
+/** POST /auditorias/:id/alcance */
+export interface AlcanceDefinido { auditoria: Auditoria; total_controles: number }
