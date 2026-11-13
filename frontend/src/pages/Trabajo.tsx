@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import { useAuditoria, useCambiarEstado, useEvaluar } from '../api/queries';
 import type { AuditoriaDetalle, EstadoEvaluacion, Evaluacion, ResumenMetricas } from '../api/types';
-import { Campo, Estados, Marca, MensajeError, conError } from '../components/basicos';
+import { Campo, Marca, MensajeError, conError } from '../components/basicos';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
 import { Postura } from '../components/Postura';
 import { FormEvidencia, FormHallazgo, FormRecomendacion } from '../components/Formularios';
 import { ESTADOS_EVALUACION, MIN_TEXTO_EVALUACION, MSG_CP04, MSG_CP05, NOMBRE_ESTADO, NOMBRE_EVALUACION, NOMBRE_FUENTE, NOMBRE_NIVEL, fecha, hora, pct } from '../lib/format';
 import { CountUp } from '../motion/CountUp';
 import { cascada, sacudir } from '../motion/efectos';
+import { sinEvaluar } from '../lib/traza';
 import { Alcance } from './Alcance';
 
 export default function Trabajo() {
@@ -20,12 +21,10 @@ export default function Trabajo() {
   // Una auditoría cerrada es de solo lectura: su vista es el acta con el sello.
   if (estado === 'CERRADA') return <Navigate to={`/auditorias/${id}/cierre`} replace />;
   // En Borrador todavía no hay nada que evaluar: la hoja se abre en su alcance.
-  if (estado === 'BORRADOR') return <Alcance id={id} datos={q.data} />;
+  if (estado === 'BORRADOR') return <Alcance id={id} />;
   return <Vista id={id} datos={q.data} />;
 }
 
-/** Recién creada por el alcance: "No implementado" sin observaciones, un estado que la API no deja guardar (CP-04). */
-const sinEvaluar = (e: Evaluacion): boolean => e.estado === 'NO_IMPLEMENTADO' && !e.observaciones;
 
 function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   const { auditoria, evaluaciones, metricas } = datos;
@@ -40,16 +39,12 @@ function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   return (
     <div className="pila">
     <div className="wk">
+      {/* La organización, las fases y el paso a Revisión están en la cabecera de la auditoría; aquí queda el cambio de estado */}
       <header className="wk-cab">
-        <div>
-          <h1 className="wk-org">{auditoria.organizacion}</h1>
-          <p className="wk-meta num">{fecha(auditoria.fecha_inicio)} – {fecha(auditoria.fecha_fin)} · {auditoria.auditor_nombre}</p>
-        </div>
-        <Estados estado={auditoria.estado} />
+        <p className="sub">Evalúa cada control y registra su evidencia, sus hallazgos y sus recomendaciones.</p>
         <div className="wk-acc">
           <div className="fila-acc">
             <button className="btn sec" type="button" disabled={cambiar.isPending} onClick={() => cambiar.mutate(destino)}>{destino === 'EN_REVISION' ? 'Pasar a revisión' : 'Volver a ejecución'}</button>
-            <Link className="btn" to={`/auditorias/${id}/cierre`}>Revisar y cerrar</Link>
           </div>
           {cambiar.isError ? <MensajeError>{cambiar.error.message}</MensajeError>
             : cambiar.isSuccess && <p className="aviso entra" role="status">Estado actualizado: {NOMBRE_ESTADO[cambiar.data.auditoria.estado]}.</p>}

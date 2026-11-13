@@ -1,45 +1,46 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAuditoria, useCambiarEstado, useInforme, useIntegridad, useTrazabilidad } from '../api/queries';
-import type { Anomalia, AuditoriaDetalle, Evaluacion, TipoAnomalia, VerificacionIntegridad } from '../api/types';
-import { Estados, Marca, MensajeError } from '../components/basicos';
+import type { Anomalia, AuditoriaDetalle, Evaluacion, TipoAnomalia } from '../api/types';
+import { Marca, MensajeError } from '../components/basicos';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
 import { FormEvidencia, FormHallazgo, FormRecomendacion } from '../components/Formularios';
-import { Historia } from '../components/Historia';
 import { MantenerParaSellar } from '../components/MantenerParaSellar';
-import { Postura } from '../components/Postura';
-import { Sello, textoOrla } from '../components/Sello';
-import { SelloRelieve } from '../components/SelloRelieve';
-import { ANOMALIA, NOMBRE_EVALUACION, fecha, hora, pct, plural, NOMBRE_CHECK } from '../lib/format';
+import { Sello } from '../components/Sello';
+import { ANOMALIA, NOMBRE_EVALUACION, pct, plural } from '../lib/format';
 import { nodosDe, tramosVivos, trazaCompleta } from '../lib/traza';
 import { cascada } from '../motion/efectos';
-import { EASE, prefersReducedMotion, reentrar, tween } from '../motion/motion';
+import { gsap } from '../motion/gsap';
+import { EASE, prefersReducedMotion, tween } from '../motion/motion';
+import { Acta } from './Acta';
 
 export default function Cierre() {
   const id = Number(useParams().id);
   const q = useAuditoria(id);
+  /** Si ya estaba cerrada al llegar, se va directa al acta; si se cierra aquí, se espera a que la hoja se selle. */
+  const cerradaAlLlegar = useRef<boolean | null>(null);
+  const [sellada, setSellada] = useState(false);
   if (q.isPending) return <Cargando />;
   if (q.isError) return <ErrorPagina error={q.error} />;
   if (q.data.auditoria.estado === 'BORRADOR') return (
     <div className="prosa">
-      <h1 className="titulo-pagina">{q.data.auditoria.organizacion}</h1>
       <p><b>Esta auditoría está en Borrador.</b> No hay nada que revisar hasta que se defina su alcance.</p>
       <p><Link className="enlace" to="/auditorias">Volver a las auditorías</Link></p>
     </div>
   );
-  return <Hoja id={id} datos={q.data} />;
+  if (cerradaAlLlegar.current === null) cerradaAlLlegar.current = q.data.auditoria.estado === 'CERRADA';
+  if (q.data.auditoria.estado === 'CERRADA' && (cerradaAlLlegar.current || sellada)) return <Acta id={id} datos={q.data} />;
+  return <Hoja id={id} datos={q.data} onSellada={() => setSellada(true)} />;
 }
 
 // Reparto del progreso --p durante el cierre (el CSS usa los mismos tramos, ver hoja.css):
 // 0–0,5 la línea fija las filas · 0,42–0,84 se fijan los trazos del sello · 0,84–1 aparece el centro.
-const P_SELLO_INICIO = 0.42, P_SELLO_TRAMO = 0.42, MS_CIERRE = 2600;
+const MS_CIERRE = 2600;
 
 type FormAbierto = { idEvaluacion: number; tipo: TipoAnomalia; idHallazgo?: number };
-function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
+function Hoja({ id, datos, onSellada }: { id: number; datos: AuditoriaDetalle; onSellada: () => void }) {
   const { auditoria, evaluaciones } = datos;
   const cerrada = auditoria.estado === 'CERRADA';
-  // 'abierta': se puede trabajar · 'cerrando': la API ya cerró y la hoja se está fijando · 'cerrada': sellada
-  const [fase, setFase] = useState<'abierta' | 'cerrando' | 'cerrada'>(cerrada ? 'cerrada' : 'abierta');
   const traz = useTrazabilidad(id, !cerrada);
   const integ = useIntegridad(id, true);
   const informe = useInforme(id, cerrada);
@@ -48,7 +49,6 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   const acta = useRef<HTMLDivElement>(null);
   const filas = useRef<HTMLOListElement>(null);
   const pulso = useRef<HTMLLIElement>(null);
-  const resultado = useRef<HTMLParagraphElement>(null);
   const cancelar = useRef<() => void>(() => {});
   // El JS solo escribe el progreso; qué significa cada tramo lo decide el CSS.
   const progreso = useCallback((p: number) => { acta.current?.style.setProperty('--p', p.toFixed(4)); }, []);
@@ -64,8 +64,6 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
   useEffect(() => { const a = requestAnimationFrame(() => setDibujada(true)), t = window.setTimeout(() => setEntrando(false), 1800); return () => { cancelAnimationFrame(a); clearTimeout(t); }; }, []);
   /** El gesto de mantener enciende los trazos del sello: el JS solo escribe --h. */
   const gesto = useCallback((h: number) => { acta.current?.style.setProperty('--h', h.toFixed(4)); }, []);
-  const [verificando, setVerificando] = useState(false);
-  const [recompuesto, setRecompuesto] = useState(0);
 
   // Al registrar algo, la señal baja por el margen desde la fila hasta la puerta de cierre.
   const filaResuelta = useRef<number | null>(null);
@@ -107,49 +105,29 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
     setConfirmando(false); setAbierto(null);
     cambiar.mutate('CERRADA', {
       // Llega aquí con el detalle y la bitácora ya recargados (incluido el eslabón de cierre).
-      onSuccess: () => { setFase('cerrando'); cancelar.current = tween(0, 1, MS_CIERRE, progreso, () => { setFase('cerrada'); gesto(0); }); },
+      // La línea fija las filas, el sello se completa y, al terminar, la hoja se archiva hacia arriba y aparece el acta
+      onSuccess: () => {
+        cancelar.current = tween(0, 1, MS_CIERRE, progreso, () => {
+          gesto(0);
+          if (prefersReducedMotion() || !acta.current) { onSellada(); return; }
+          gsap.to(acta.current, { y: -40, opacity: 0, duration: 0.5, delay: 0.5, ease: 'power3.in', onComplete: onSellada });
+        });
+      },
       onError: () => { setReinicio(x => x + 1); void traz.refetch(); },
     });
-  };
-
-  const verificar = async () => {
-    setVerificando(true);
-    const r = await integ.refetch();
-    setVerificando(false);
-    const v = r.data;
-    if (!v) return;
-    cancelar.current(); setRecompuesto(x => x + 1);
-    // Íntegra: el anillo se recorre entero. Rota: se detiene en el último eslabón que se pudo verificar.
-    const hasta = v.integra ? 1 : P_SELLO_INICIO + P_SELLO_TRAMO * (v.cadena.eslabones_verificados / Math.max(1, v.cadena.total_eslabones));
-    cancelar.current = tween(P_SELLO_INICIO, hasta, v.integra ? 1100 : 700, progreso, () => { progreso(1); reentrar(resultado.current); });
   };
 
   const anomaliasDe = (e: Evaluacion): Anomalia[] => (cerrada ? [] : (traz.data?.anomalias ?? []).filter(a => a.id_evaluacion === e.id));
   const completas = evaluaciones.filter(e => trazaCompleta(nodosDe(e))).length;
   const apta = traz.data?.apta_para_cierre === true;
-  const v: VerificacionIntegridad | undefined = integ.data;
+  const v = integ.data;
   const inf = informe.data?.informe;
-  const sellada = fase === 'cerrada' && cerrada;
-  const tipos = useMemo(() => (eslabones ?? []).map(e => e.tipo_evento), [eslabones]);
-  const nombres = useMemo(() => Object.fromEntries(evaluaciones.map(e => [e.control.codigo_iso, e.control.nombre])), [evaluaciones]);
   const fechaCierre = cerrada && inf ? inf.fecha_generacion.slice(0, 10) : null;
   const cifra = cerrada && inf ? pct(Number(inf.cumplimiento_pct)) : null;
-  const selloPlano = <Sello eslabones={eslabones ?? []} verificacion={cerrada && v ? v : null} cifra={cifra} fechaCierre={fechaCierre} idNuevo={idNuevo} />;
 
   return (
-    <div className="pila">
     <div className={`acta${apta || cerrada ? ' apta' : ''}`} ref={acta} data-estado={auditoria.estado} style={{ '--n': evaluaciones.length } as React.CSSProperties}>
       <div className="hoja">
-        <header className="hoja-cab">
-          <div>
-            <p className="sub num">Auditoría n.º {auditoria.id} · ISO/IEC 27002:2022</p>
-            <h1 className="hoja-titulo">{auditoria.organizacion}</h1>
-            <p className="hoja-alcance">{auditoria.alcance}</p>
-            <p className="hoja-datos num"><span>{fecha(auditoria.fecha_inicio)} – {fecha(auditoria.fecha_fin)}</span><span>{auditoria.auditor_nombre}</span></p>
-          </div>
-          <Estados estado={auditoria.estado} />
-        </header>
-
         <div className="hoja-cuerpo">
           <div className="hoja-cols" aria-hidden="true"><span>Control</span><span /><span>Estado</span><div className="traza-cols"><span>Evidencia</span><span>Hallazgo</span><span>Recomendación</span><span /></div></div>
           <ol className={`hoja-filas${dibujada ? ' dibujada' : ''}${entrando ? ' entrando' : ''}`} ref={filas}>
@@ -185,78 +163,39 @@ function Hoja({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
           <div className="platina" />
         </div>
 
-        <footer className={`hoja-pie${sellada ? ' sellada' : ''}`}>
+        <footer className="hoja-pie">
           <div className="pie-txt">
-            {!sellada ? (
-              <div>
-                <p className="num"><b>{completas} de {evaluaciones.length} trazas completas</b>{eslabones && <> · {plural(eslabones.length, 'eslabón', 'eslabones')} en la bitácora</>}</p>
-                {traz.isError ? <MensajeError>{traz.error.message}</MensajeError>
-                  : !traz.data ? <p className="sub">{cerrada ? 'Fijando la hoja…' : 'Consultando la trazabilidad…'}</p>
-                  : apta ? <p className="resumen"><span>Trazabilidad completa: la API no informa de anomalías. Después de cerrar, la auditoría no admite cambios.</span></p>
-                  : <p className="resumen num">{(Object.keys(ANOMALIA) as TipoAnomalia[]).map(t => <span key={t}>{ANOMALIA[t].resumen}: <b>{traz.data.resumen[t] ?? 0}</b></span>)}</p>}
-                {!cerrada && (
-                  <div className="fila-acc">
-                    {confirmando ? (
-                      <>
-                        <button className="btn" type="button" onClick={cerrar} disabled={cambiar.isPending}>Confirmar el cierre definitivo</button>
-                        <button className="enlace" type="button" onClick={() => setConfirmando(false)}>Cancelar</button>
-                      </>
-                    ) : (
-                      <>
-                        {/* Cerrar no tiene vuelta atrás: hay que mantener el botón. Mientras, el sello se va completando. */}
-                        <MantenerParaSellar etiqueta={cambiar.isPending ? 'Cerrando…' : 'Mantén pulsado para cerrar'} disabled={!apta || cambiar.isPending} onProgreso={gesto} onCompleto={cerrar} reinicio={reinicio} />
-                        {apta && <button className="enlace" type="button" onClick={() => setConfirmando(true)}>Cerrar sin mantener</button>}
-                        <Link className="enlace" to={`/auditorias/${id}`}>Volver a la evaluación</Link>
-                      </>
-                    )}
-                  </div>
-                )}
-                {cambiar.isError && <MensajeError>{cambiar.error.message}{cambiar.error.body.total_anomalias ? ` ${plural(cambiar.error.body.total_anomalias, 'anomalía pendiente', 'anomalías pendientes')}.` : ''}</MensajeError>}
-              </div>
-            ) : (
-              <div>
-                {integ.isError ? <MensajeError>{integ.error.message}</MensajeError> : !v ? <p className="sub">Verificando la integridad…</p> : (
-                  <>
-                    <p ref={resultado} className="entra" role="status">
-                      {v.integra ? (
-                        <><b>{inf ? `Cerrada el ${fecha(inf.fecha_generacion)} a las ${hora(inf.fecha_generacion)}.` : 'Cerrada.'}</b>{inf && ` Cumplimiento del ${pct(Number(inf.cumplimiento_pct))}.`} Cadena íntegra: {v.cadena.eslabones_verificados} de {v.cadena.total_eslabones} eslabones verificados.</>
-                      ) : v.cadena.ruptura ? (
-                        <><b>No íntegra.</b> La cadena se rompe en el eslabón {v.cadena.ruptura.posicion} de {v.cadena.total_eslabones} ({v.cadena.ruptura.motivo}): se esperaba {v.cadena.ruptura.esperado} y se encontró {v.cadena.ruptura.encontrado}. Solo se verificaron {v.cadena.eslabones_verificados} eslabones.</>
-                      ) : (
-                        <><b>No íntegra.</b> La cadena es válida, pero el informe no supera todas las comprobaciones.</>
-                      )}
-                    </p>
-                    <p className="hash sub">hash_final {v.hash_final}</p>
-                    <dl className="checks">
-                      <dt>La cadena es válida</dt><dd className={v.cadena.valida ? '' : 'no'}>{v.cadena.valida ? 'Sí' : 'No'}</dd>
-                      {v.informe && Object.entries(v.informe.checks).map(([k, ok]) => <FilaCheck key={k} nombre={NOMBRE_CHECK[k] ?? k} ok={ok} />)}
-                    </dl>
-                    <div className="fila-acc">
-                      <Link className="btn" to={`/auditorias/${id}/informe`}>Imprimir informe</Link>
-                      <button className="btn sec" type="button" onClick={() => void verificar()} disabled={verificando}>{verificando ? 'Verificando…' : 'Verificar integridad'}</button>
-                      <Link className="enlace" to="/auditorias">Volver a las auditorías</Link>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+            <div>
+              <p className="num"><b>{completas} de {evaluaciones.length} trazas completas</b>{eslabones && <> · {plural(eslabones.length, 'eslabón', 'eslabones')} en la bitácora</>}</p>
+              {traz.isError ? <MensajeError>{traz.error.message}</MensajeError>
+                : cerrada ? <p className="sub" role="status">Cerrada. Fijando la hoja y sellando el acta…</p>
+                : !traz.data ? <p className="sub">Consultando la trazabilidad…</p>
+                : apta ? <p className="resumen"><span>Trazabilidad completa: la API no informa de anomalías. Después de cerrar, la auditoría no admite cambios.</span></p>
+                : <p className="resumen num">{(Object.keys(ANOMALIA) as TipoAnomalia[]).map(t => <span key={t}>{ANOMALIA[t].resumen}: <b>{traz.data.resumen[t] ?? 0}</b></span>)}</p>}
+              {!cerrada && (
+                <div className="fila-acc">
+                  {confirmando ? (
+                    <>
+                      <button className="btn" type="button" onClick={cerrar} disabled={cambiar.isPending}>Confirmar el cierre definitivo</button>
+                      <button className="enlace" type="button" onClick={() => setConfirmando(false)}>Cancelar</button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Cerrar no tiene vuelta atrás: hay que mantener el botón. Mientras, el sello se va completando. */}
+                      <MantenerParaSellar etiqueta={cambiar.isPending ? 'Cerrando…' : 'Mantén pulsado para cerrar'} disabled={!apta || cambiar.isPending} onProgreso={gesto} onCompleto={cerrar} reinicio={reinicio} />
+                      {apta && <button className="enlace" type="button" onClick={() => setConfirmando(true)}>Cerrar sin mantener</button>}
+                      <Link className="enlace" to={`/auditorias/${id}`}>Volver a la evaluación</Link>
+                    </>
+                  )}
+                </div>
+              )}
+              {cambiar.isError && <MensajeError>{cambiar.error.message}{cambiar.error.body.total_anomalias ? ` ${plural(cambiar.error.body.total_anomalias, 'anomalía pendiente', 'anomalías pendientes')}.` : ''}</MensajeError>}
+            </div>
           </div>
-          {sellada && v && inf
-            ? <SelloRelieve tipos={tipos} hashFinal={v.hash_final} cifra={cifra ?? ''} orla={textoOrla(v, fechaCierre)} ruptura={v.integra ? null : v.cadena.ruptura?.posicion ?? null} pulso={recompuesto}>{selloPlano}</SelloRelieve>
-            : selloPlano}
+          <Sello eslabones={eslabones ?? []} verificacion={cerrada && v ? v : null} cifra={cifra} fechaCierre={fechaCierre} idNuevo={idNuevo} />
         </footer>
       </div>
-    </div>
-    {sellada && eslabones && inf && (
-      <>
-        <Historia eslabones={eslabones} nombres={nombres} titulo={`Historia de la auditoría n.º ${auditoria.id}`} cifra={cifra ?? ''} orla={v ? textoOrla(v, fechaCierre) : ''} />
-        <Postura evaluaciones={evaluaciones} />
-      </>
-    )}
     </div>
   );
 }
 
-function FilaCheck({ nombre, ok }: { nombre: string; ok: boolean }) {
-  return <><dt>{nombre}</dt><dd className={ok ? '' : 'no'}>{ok ? 'Sí' : 'No'}</dd></>;
-}

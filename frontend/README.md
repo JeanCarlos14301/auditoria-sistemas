@@ -37,10 +37,13 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 | `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
 | `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas y postura por atributo |
-| `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control, la puerta de cierre, el sello de integridad y, ya cerrada, la historia de la auditoría |
+| `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control y la puerta de cierre. Ya cerrada, **el acta**: empieza por el resultado (cumplimiento sellado, veredicto de integridad, imprimir el informe y el sello en relieve) y sigue con los controles por cláusula, los hallazgos del más grave al menos y la postura por atributo, con un índice en el margen |
+| `/auditorias/:id/historia` | **Historia**: la bitácora se reproduce eslabón a eslabón |
 | `/auditorias/:id/informe` | **Informe para imprimir** (RF08), solo con la auditoría cerrada: las hojas A4 tal como salen, con la huella del informe al pie de cada una |
 
 El panel (RF09) se cubre con las métricas de cada auditoría.
+
+Todas las pantallas comparten un **marco de documento**: la página es papel a todo el ancho, con una barra fija que dice dónde se está (Auditorías / n.º 7 · Organización / vista) y un pie. Las vistas de una auditoría cuelgan de una ruta contenedora (`src/pages/AuditoriaLayout.tsx`) que pinta una sola vez su cabecera (`src/components/CabeceraAuditoria.tsx`): organización, las cuatro fases con la fecha en que la bitácora registró cada una y las pestañas de las vistas que existen en su estado (Alcance · Trabajo, Revisión e Historia · Acta e Historia).
 
 ## Reglas que respeta el código
 
@@ -59,7 +62,7 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 
 - **Tokens** en `src/styles/tokens.css`: tema claro y oscuro, tipografía (Libre Franklin para el texto; Newsreader como acento, solo en la marca, el título de la hoja y la cifra de cumplimiento) y las dos curvas de movimiento.
 - **El eslabón que falta.** Cada control lleva su traza: evidencia, hallazgo y recomendación. Donde falta un eslabón, la línea se corta (`src/lib/traza.ts`).
-- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra. En la entrada y en el acta cerrada se dibuja en relieve con three.js (`src/components/SelloRelieve.tsx`); el sello plano se queda como respaldo mientras carga o si no hay WebGL.
+- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra. En la entrada y en el acta cerrada se dibuja en relieve con three.js (`src/components/SelloRelieve.tsx`); el sello plano se queda como respaldo mientras carga, si no hay WebGL o si el WebGL es por software (sin GPU un fotograma tarda segundos y congelaría la página). Para probar el relieve en una máquina sin GPU, en desarrollo: `sessionStorage.setItem('audita:relieve-sin-gpu', '1')`.
 
 ### Movimiento
 
@@ -95,7 +98,7 @@ src/
   motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP y gestos comunes
   lib/          formato, lógica de la traza, geometría del sello, historia de la auditoría y paginador (con tests)
   components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura, contenido del informe
-  pages/        Login, Auditorias, NuevaAuditoria, Alcance, Trabajo, Cierre, Informe
+  pages/        Login, Auditorias, NuevaAuditoria, AuditoriaLayout, Alcance, Trabajo, Cierre, Acta, HistoriaPagina, Informe
   styles/       tokens y estilos por pantalla
   assets/       bitácora de ejemplo para el sello de la entrada
 ```

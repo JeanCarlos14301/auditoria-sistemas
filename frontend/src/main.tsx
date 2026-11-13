@@ -15,6 +15,8 @@ import './styles/listado.css';
 import './styles/alcance.css';
 import './styles/propuestas.css';
 import './styles/informe.css';
+import './styles/marco.css';
+import './styles/acta.css';
 import './styles/utilidades.css';
 import { ApiError } from './api/client';
 import { AuthProvider } from './auth/AuthContext';

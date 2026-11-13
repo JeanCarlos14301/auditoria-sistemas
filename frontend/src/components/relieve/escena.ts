@@ -41,7 +41,17 @@ export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos:
   const N = datos.tipos.length, raiz = document.documentElement;
   // Por defecto, el encuadre de siempre: el sello llena el 88 % de una caja cuadrada
   const encuadre = op.encuadre ?? 0.878, zona = op.zona ?? caja, inclinacion = op.inclinacion ?? 0.32, giroFinal = op.giro ?? 0;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  // Sin aceleración por hardware (WebGL por software, como SwiftShader o llvmpipe) un fotograma del relieve tarda
+  // segundos y congela la página: el contexto no se crea, crearEscena lanza y SelloRelieve deja el sello plano.
+  // Solo en desarrollo se puede forzar, para probar el relieve en una máquina sin GPU.
+  const forzar = import.meta.env.DEV && (() => { try { return sessionStorage.getItem('audita:relieve-sin-gpu') === '1'; } catch { return false; } })();
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, failIfMajorPerformanceCaveat: !forzar });
+  if (!forzar) {
+    // Algunos navegadores no avisan con failIfMajorPerformanceCaveat: se mira el nombre del renderizador
+    const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
+    const nombre = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(nombre)) { renderer.dispose(); throw new Error(`WebGL por software (${nombre}): se usa el sello plano`); }
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // nunca más de 2
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(26, 1, 0.1, 40); cam.position.set(0, 0, 7.6);

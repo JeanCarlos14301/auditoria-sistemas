@@ -1,3 +1,6 @@
+/* La vista de impresión es una mesa: las hojas, sobre fondo gris */
+body:has(.inf), body:has(.inf) .barra, body:has(.inf)::before { background: var(--bg); }
+
 /* Vista de impresión del informe (pages/Informe.tsx). La pantalla enseña las hojas A4 tal como salen de la impresora.
    Clases .inf-*: la interfaz alrededor de las hojas. Clases .a4-*: lo que va impreso.
    El JS escribe --s (escala de las hojas), --p (avance del scroll) y clases; nunca colores. */

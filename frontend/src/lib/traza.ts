@@ -31,3 +31,6 @@ export function tramosVivos(t: Traza): [boolean, boolean, boolean] {
   return [a, b, c];
 }
 export const trazaCompleta = (t: Traza): boolean => !t.some(corta);
+
+/** Recién creada por el alcance: "No implementado" sin observaciones, un estado que la API no deja guardar (CP-04). */
+export const sinEvaluar = (e: Pick<Evaluacion, 'estado' | 'observaciones'>): boolean => e.estado === 'NO_IMPLEMENTADO' && !e.observaciones;

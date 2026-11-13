@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate as resorte } from 'motion';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useControles, useDefinirAlcance, useRefrescarAuditoria } from '../api/queries';
-import type { AuditoriaDetalle, ControlISO, EstadoAuditoria } from '../api/types';
-import { Estados, MensajeError } from '../components/basicos';
+import type { ControlISO } from '../api/types';
+import { MensajeError } from '../components/basicos';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
-import { fecha, plural } from '../lib/format';
+import { plural } from '../lib/format';
 import { brincar, cascada, sacudir } from '../motion/efectos';
-import { CURVA, Flip, SplitText, gsap } from '../motion/gsap';
+import { CURVA, Flip, gsap } from '../motion/gsap';
 import { prefersReducedMotion, tween } from '../motion/motion';
 
 const MIN = 10, MAX = 15;
@@ -17,21 +17,17 @@ const MIN = 10, MAX = 15;
  * El contador son quince casillas siempre a la vista. Cada control marcado sale de su fila como una ficha
  * y va a ocupar su casilla; al desmarcarlo, la ficha cae. Al confirmar, la hoja fija los controles elegidos.
  */
-export function Alcance({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
-  const { auditoria } = datos;
+export function Alcance({ id }: { id: number }) {
   const q = useControles();
   const definir = useDefinirAlcance(id);
   const refrescar = useRefrescarAuditoria(id);
-  const recien = (useLocation().state as { recien?: boolean } | null)?.recien === true;
 
   const [marcados, setMarcados] = useState<ReadonlySet<number>>(new Set());
   const [enVuelo, setEnVuelo] = useState<ReadonlySet<number>>(new Set());
   const [filtro, setFiltro] = useState('TODAS');
-  const [estado, setEstado] = useState<EstadoAuditoria>(auditoria.estado);
   const [fijando, setFijando] = useState(false);
   const acta = useRef<HTMLDivElement>(null), cat = useRef<HTMLOListElement>(null), casillas = useRef<HTMLDivElement>(null);
   const llave = useRef<SVGPathElement>(null), boton = useRef<HTMLButtonElement>(null), cifra = useRef<HTMLSpanElement>(null), medidor = useRef<HTMLDivElement>(null);
-  const titulo = useRef<HTMLHeadingElement>(null);
   const antes = useRef<Flip.FlipState | null>(null), nPrevio = useRef(0), entrado = useRef(false);
 
   const controles = useMemo(() => q.data ?? [], [q.data]);
@@ -41,19 +37,12 @@ export function Alcance({ id, datos }: { id: number; datos: AuditoriaDetalle }) 
   const temas = useMemo(() => [...new Set(controles.map(c => c.categoria_tema))], [controles]);
   const visibles = filtro === 'TODAS' ? controles : controles.filter(c => c.categoria_tema === filtro);
 
-  // Entrada: recién creada, el título se asienta letra a letra; el catálogo entra en cascada
+  // Entrada: el catálogo entra en cascada
   useEffect(() => {
     if (!controles.length || entrado.current) return;
     entrado.current = true;
     if (cat.current) cascada(cat.current.querySelectorAll('.ctl'), 40);
-    if (!recien || prefersReducedMotion() || !titulo.current) return;
-    const ctx = gsap.context(() => {
-      const partes = SplitText.create(titulo.current!, { type: 'chars' });
-      gsap.from(partes.chars, { yPercent: 70, opacity: 0, duration: 0.7, stagger: 0.022, ease: CURVA.entrada, onComplete: () => partes.revert() });
-      gsap.from('.hoja-alcance, .hoja-datos', { opacity: 0, y: 10, duration: 0.6, stagger: 0.08, delay: 0.25, ease: CURVA.entrada });
-    }, acta);
-    return () => ctx.revert();
-  }, [controles.length, recien]);
+  }, [controles.length]);
 
   // El número rueda al cambiar; al entrar en el tramo válido se dibuja la llave (DrawSVG) y el botón brinca
   useEffect(() => {
@@ -106,10 +95,10 @@ export function Alcance({ id, datos }: { id: number; datos: AuditoriaDetalle }) 
 
   const confirmar = () => {
     definir.mutate(elegidos.map(c => c.id), {
-      onSuccess: r => {
+      onSuccess: () => {
         // Los controles que no entran se retiran y los elegidos se juntan (GSAP Flip): se anota dónde está cada fila
         if (cat.current && !prefersReducedMotion()) antes.current = Flip.getState(cat.current.querySelectorAll('.ctl'));
-        setFiltro('TODAS'); setEstado(r.auditoria.estado); setFijando(true);
+        setFiltro('TODAS'); setFijando(true);
       },
     });
   };
@@ -133,16 +122,6 @@ export function Alcance({ id, datos }: { id: number; datos: AuditoriaDetalle }) 
   return (
     <div className="acta" ref={acta} style={{ '--n': Math.max(1, n) } as React.CSSProperties}>
       <div className="hoja">
-        <header className="hoja-cab">
-          <div>
-            <p className="sub num">Auditoría n.º {auditoria.id} · ISO/IEC 27002:2022</p>
-            <h1 className="hoja-titulo" ref={titulo}>{auditoria.organizacion}</h1>
-            <p className="hoja-alcance">{auditoria.alcance}</p>
-            <p className="hoja-datos num"><span>{fecha(auditoria.fecha_inicio)} – {fecha(auditoria.fecha_fin)}</span><span>{auditoria.auditor_nombre}</span></p>
-          </div>
-          <Estados estado={estado} />
-        </header>
-
         <div className="hoja-cuerpo">
           <div className="filtros" role="group" aria-label="Filtrar por categoría">
             {fijando ? <span className="sub">Alcance de la auditoría</span> : (

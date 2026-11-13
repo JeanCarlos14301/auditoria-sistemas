@@ -25,10 +25,14 @@ export function cascada(els: Element[] | NodeListOf<Element>, paso = 45): void {
   animar(lista, { opacity: [0, 1], y: [16, 0], duration: 700, ease: 'outExpo', delay: stagger(paso), onComplete: limpiar });
 }
 
-/** Mueve el indicador de un grupo de pestañas hasta el botón activo con un resorte. */
-export function moverIndicador(grupo: HTMLElement | null, conResorte: boolean): void {
+/**
+ * Mueve el indicador de un grupo de pestañas hasta el elemento activo con un resorte.
+ * Por defecto, en horizontal y para los grupos de chips; `eje: 'y'` lo mueve en vertical (índice de un documento).
+ */
+export function moverIndicador(grupo: HTMLElement | null, conResorte: boolean, activoSel = '[aria-pressed="true"]', indSel = '.chip-ind', eje: 'x' | 'y' = 'x'): void {
   if (!grupo) return;
-  const ind = grupo.querySelector<HTMLElement>('.chip-ind'), activo = grupo.querySelector<HTMLElement>('[aria-pressed="true"]');
+  const ind = grupo.querySelector<HTMLElement>(indSel), activo = grupo.querySelector<HTMLElement>(activoSel);
   if (!ind || !activo) return;
-  resorte(ind, { x: activo.offsetLeft, width: activo.offsetWidth }, conResorte && !prefersReducedMotion() ? RESORTE : { duration: 0 });
+  const destino = eje === 'x' ? { x: activo.offsetLeft, width: activo.offsetWidth } : { y: activo.offsetTop, height: activo.offsetHeight };
+  resorte(ind, destino, conResorte && !prefersReducedMotion() ? RESORTE : { duration: 0 });
 }
