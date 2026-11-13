@@ -1,22 +1,9 @@
 import type { ReactNode } from 'react';
-import type { EstadoAuditoria, EstadoEvaluacion } from '../api/types';
-import { ESTADOS_AUDITORIA, NOMBRE_ESTADO } from '../lib/format';
+import type { EstadoEvaluacion } from '../api/types';
 
-/** Marca de estado de un control: la forma y el color salen del CSS (.marca[data-v]). */
-export function Marca({ estado, titulo }: { estado: EstadoEvaluacion; titulo?: string }) {
+/** Marca de estado de un control: la forma y el color salen del CSS (.marca[data-v]). PEND: todavía sin evaluar. */
+export function Marca({ estado, titulo }: { estado: EstadoEvaluacion | 'PEND'; titulo?: string }) {
   return <i className="marca" data-v={estado} title={titulo} aria-hidden="true" />;
-}
-
-/** Los cuatro estados de la auditoría con un indicador que se desplaza al estado actual. */
-export function Estados({ estado }: { estado: EstadoAuditoria }) {
-  return (
-    <div className="estados" style={{ '--idx': ESTADOS_AUDITORIA.indexOf(estado) } as React.CSSProperties} role="group" aria-label="Estado de la auditoría">
-      <ol>
-        {ESTADOS_AUDITORIA.map(e => <li key={e} aria-current={e === estado ? 'step' : undefined}>{NOMBRE_ESTADO[e]}</li>)}
-      </ol>
-      <span className="estados-marca" />
-    </div>
-  );
 }
 
 export function MensajeError({ children, id }: { children: ReactNode; id?: string }) {

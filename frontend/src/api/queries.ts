@@ -56,5 +56,14 @@ export function useCrearAuditoria() {
   const qc = useQueryClient();
   return useMutation<Auditoria, ApiError, CrearAuditoriaInput>({ mutationFn: ep.crearAuditoria, onSuccess: () => { void qc.invalidateQueries({ queryKey: clave.lista }); } });
 }
+/** Trae a la caché todo lo que necesitan la cabecera y el alcance de una auditoría, antes de abrirla. */
+export function usePrecargarAuditoria() {
+  const qc = useQueryClient();
+  return useCallback((id: number) => Promise.all([
+    qc.prefetchQuery({ queryKey: clave.detalle(id), queryFn: () => ep.detalleAuditoria(id) }),
+    qc.prefetchQuery({ queryKey: clave.integridad(id), queryFn: () => ep.verificarIntegridad(id) }),
+    qc.prefetchQuery({ queryKey: ['controles'] as const, queryFn: ep.controles, staleTime: 5 * 60_000 }),
+  ]).then(() => undefined), [qc]);
+}
 /** Definir el alcance no recarga: la pantalla fija primero los controles elegidos y recarga al terminar. */
 export const useDefinirAlcance = (idAuditoria: number) => useMutation<AlcanceDefinido, ApiError, number[]>({ mutationFn: ids => ep.definirAlcance(idAuditoria, ids) });

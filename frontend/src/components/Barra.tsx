@@ -39,7 +39,7 @@ export function Marco() {
                   <span className="sep sep-vista" aria-hidden="true">/</span><span className="miga-vista" aria-current="page">{miga.vista}</span>
                 </>
               )}
-              {enNueva && <><span className="sep" aria-hidden="true">/</span><span className="miga-vista" aria-current="page">Nueva auditoría</span></>}
+              {enNueva && <><span className="sep sep-vista" aria-hidden="true">/</span><span className="miga-vista" aria-current="page">Nueva auditoría</span></>}
             </nav>
             {estado.fase === 'activa' && (
               <div className="barra-usuario">

@@ -34,9 +34,9 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 |---|---|
 | `/login` | **Entrar**: la pantalla entera es la portada de un acta. Junto al formulario, el sello en relieve de una auditoría de ejemplo se compone mientras el pie cuenta cada evento; la luz sigue al cursor y, al entrar, el sello se vuelve a estampar y la hoja se archiva |
 | `/auditorias` | **Índice**: los filtros son el resumen (cuántas hay en cada estado); búsqueda por organización o alcance, sin tildes y con la coincidencia resaltada; con «Todas», agrupadas por lo que toca hacer (primero las que están en revisión) y cada fila dice su siguiente paso y lleva a él. Al filtrar, ordenar o buscar, las filas viajan a su sitio |
-| `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
-| `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
-| `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas y postura por atributo |
+| `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): se escribe donde irá su cabecera (el nombre en el sitio del título, el alcance y las fechas debajo, las cuatro fases esperando). Avisa al momento si las fechas están invertidas y dice cuántos días dura. Al crearla recibe su número, Borrador toma su fecha y, con sus datos ya en la caché, el título, el alcance, las fases y las pestañas viajan hasta la cabecera del alcance |
+| `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): el catálogo, con búsqueda por código, nombre o criterio y filtro por cláusula, y al lado la hoja de los elegidos con el contador de 10 a 15. Cada control marcado viaja como una ficha hasta su sitio; al quitarlo, cae. Al confirmar, los no elegidos se retiran y una línea fija los elegidos antes de abrir el trabajo |
+| `/auditorias/:id` | **Trabajo**: a la izquierda el índice de controles con sus nombres completos, agrupados por cláusula (con filtro «Por evaluar»); en el centro el control (criterio, ejemplo de evidencia, estado y lo que ese estado exige para poder cerrar, con la misma traza de la revisión) y sus evidencias, hallazgos y recomendaciones; a la derecha las métricas de la API, fijas. Al guardar ofrece el siguiente por evaluar. Debajo, la postura por atributo. En el móvil, una barra fija (anterior, este, siguiente) abre el índice a pantalla completa |
 | `/auditorias/:id/cierre` | **Revisión y cierre**: una sola tabla con la traza de cada control (evidencia, hallazgo, recomendación), agrupada por cláusula. Por defecto enseña solo lo pendiente: cada anomalía que informa la API va en su fila, con el formulario para resolverla ahí mismo; al guardar, la fila se completa y una señal baja a la puerta de cierre, fija abajo, que cuenta las trazas completas y se abre cuando la API dice que se puede cerrar. Al mantener pulsado, la platina recorre la tabla fijando cada fila y la vista pasa al acta. Ya cerrada, **el acta**: empieza por el resultado (cumplimiento sellado, veredicto de integridad, imprimir el informe y el sello en relieve) y sigue con los controles por cláusula, los hallazgos del más grave al menos y la postura por atributo, con un índice en el margen |
 | `/auditorias/:id/historia` | **Historia**: la bitácora se reproduce eslabón a eslabón |
 | `/auditorias/:id/informe` | **Informe para imprimir** (RF08), solo con la auditoría cerrada: las hojas A4 tal como salen, con la huella del informe al pie de cada una |
@@ -95,9 +95,9 @@ La vista del informe enseña en pantalla las mismas hojas que se imprimen: cada 
 src/
   api/          tipos del contrato, cliente HTTP (ApiError, 401), endpoints y consultas
   auth/         sesión (AuthProvider) y rutas privadas
-  motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP y gestos comunes
+  motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP, gestos comunes y el viaje de la hoja nueva a la cabecera
   lib/          formato, lógica de la traza, geometría del sello, historia de la auditoría y paginador (con tests)
-  components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura, contenido del informe
+  components/   piezas comunes, formularios, resaltado de búsqueda, sellos (plano, vivo y en relieve), historia, postura, contenido del informe
   pages/        Login, Auditorias, NuevaAuditoria, AuditoriaLayout, Alcance, Trabajo, Cierre (Revision o Acta), HistoriaPagina, Informe
   styles/       tokens y estilos por pantalla
   assets/       bitácora de ejemplo para el sello de la entrada

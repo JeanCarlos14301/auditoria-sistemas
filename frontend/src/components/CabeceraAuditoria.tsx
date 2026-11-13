@@ -6,7 +6,9 @@ import type { AuditoriaDetalle, EstadoAuditoria, Eslabon } from '../api/types';
 import { ESTADOS_AUDITORIA, NOMBRE_ESTADO, fecha, plural } from '../lib/format';
 import { sinEvaluar } from '../lib/traza';
 import { cascada, moverIndicador } from '../motion/efectos';
+import { gsap } from '../motion/gsap';
 import { prefersReducedMotion } from '../motion/motion';
+import { viajar, viajeReciente } from '../motion/viaje';
 import { useMiga } from './Miga';
 
 /** La fecha en que la bitácora registró la entrada en cada fase. */
@@ -73,10 +75,15 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
     return () => ro.disconnect();
   }, []);
 
-  // Al abrir la auditoría: los datos en cascada y las fases se encienden una tras otra
+  // Al abrir la auditoría: los datos en cascada y las fases se encienden una tras otra.
+  // Recién creada, en cambio, sus piezas llegan desde donde se escribieron en «Nueva auditoría».
+  const viaje = useRef(viajeReciente(loc.state));
+  useLayoutEffect(() => {
+    if (viajar(raiz.current, viaje.current) && raiz.current) gsap.from(raiz.current.querySelectorAll('.cab-datos > :not(.alc)'), { opacity: 0, duration: 0.4, delay: 0.45, stagger: 0.08 });
+  }, [a.id]);
   useEffect(() => {
     primera.current = false;
-    const el = raiz.current; if (!el || prefersReducedMotion()) return;
+    const el = raiz.current; if (!el || prefersReducedMotion() || viaje.current) return;
     cascada(el.querySelectorAll('.cab-a > *'), 70);
     animar(el.querySelectorAll('.fase i'), { scale: [0, 1], duration: 500, ease: 'outBack', delay: stagger(140, { start: 250 }) });
   }, [a.id]);
@@ -85,11 +92,11 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
   return (
     <section className="cab" ref={raiz} aria-label="Auditoría">
       <div className="cab-a">
-        <p className="rot">Auditoría n.º {a.id} · ISO/IEC 27002:2022 · ISO 19011:2018</p>
-        <h1 className="cab-org" ref={titulo}>{a.organizacion}</h1>
-        <p className="cab-datos"><span className="alc">{a.alcance}</span><span className="num">{fecha(a.fecha_inicio)} – {fecha(a.fecha_fin)}</span><span>{a.auditor_nombre}</span></p>
+        <p className="rot" data-viaje="rot">Auditoría n.º {a.id} · ISO/IEC 27002:2022 · ISO 19011:2018</p>
+        <h1 className="cab-org" ref={titulo} data-viaje="org">{a.organizacion}</h1>
+        <p className="cab-datos"><span className="alc" data-viaje="alc">{a.alcance}</span><span className="num">{fecha(a.fecha_inicio)} – {fecha(a.fecha_fin)}</span><span>{a.auditor_nombre}</span></p>
       </div>
-      <ol className="fases" aria-label="Fases de la auditoría">
+      <ol className="fases" aria-label="Fases de la auditoría" data-viaje="fases">
         {ESTADOS_AUDITORIA.map((s, i) => (
           <li key={s} className={`fase${i < k ? ' hecha' : i === k ? ' actual' : ''}`} aria-current={i === k ? 'step' : undefined}>
             <i aria-hidden="true" /><b>{NOMBRE_ESTADO[s]}</b><span className="fecha num">{i <= k && fechas[s] ? fecha(fechas[s]!) : ' '}</span>
@@ -97,7 +104,7 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
         ))}
       </ol>
       <div className="pestanas-w">
-        <div className="pestanas" ref={pestanas} role="navigation" aria-label="Vistas de la auditoría">
+        <div className="pestanas" ref={pestanas} role="navigation" aria-label="Vistas de la auditoría" data-viaje="pest">
           <span className="pest-ind" aria-hidden="true" />
           {lista.map(p => <NavLink key={p.a} to={p.a} end={p.fin} className="pest"><b>{p.nombre}</b><small className="num">{p.meta}</small></NavLink>)}
         </div>

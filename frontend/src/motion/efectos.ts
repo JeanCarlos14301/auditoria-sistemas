@@ -16,13 +16,13 @@ export function brincar(el: Element | null, desde = 0.6): void {
   if (el && !prefersReducedMotion()) resorte(el, { scale: [desde, 1] }, { type: 'spring', stiffness: 520, damping: 13 });
 }
 
-/** Entrada escalonada de una lista (anime.js stagger). Al terminar retira sus estilos en línea. */
-export function cascada(els: Element[] | NodeListOf<Element>, paso = 45): void {
+/** Entrada escalonada de una lista (anime.js stagger). `dy`: desde dónde sube (negativo, baja). Al terminar retira sus estilos en línea. */
+export function cascada(els: Element[] | NodeListOf<Element> | HTMLCollection, paso = 45, dy = 16): void {
   const lista = Array.from(els);
   if (!lista.length || prefersReducedMotion()) return;
   // No se usa revert(): si se llama dos veces sobre los mismos elementos, la segunda devolvería el estado inicial de la primera
   const limpiar = () => lista.forEach(el => { const st = (el as HTMLElement).style; st.removeProperty('opacity'); st.removeProperty('transform'); });
-  animar(lista, { opacity: [0, 1], y: [16, 0], duration: 700, ease: 'outExpo', delay: stagger(paso), onComplete: limpiar });
+  animar(lista, { opacity: [0, 1], y: [dy, 0], duration: 700, ease: 'outExpo', delay: stagger(paso), onComplete: limpiar });
 }
 
 /**
