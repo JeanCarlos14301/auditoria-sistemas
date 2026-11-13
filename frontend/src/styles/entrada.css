@@ -1,45 +1,60 @@
-/* Entrar: "Sello en seco". El formulario y el sello en relieve comparten la misma hoja de papel, a pantalla completa. */
-.entrada { display: grid; grid-template-columns: minmax(380px, 5fr) 7fr; min-height: 100svh; background: var(--surface); }
-.entrada-col {
-  display: grid; grid-template-rows: auto 1fr auto; gap: 28px; min-width: 0;
-  padding-block: max(clamp(22px, 4vh, 44px), env(safe-area-inset-top, 0px)) max(clamp(22px, 4vh, 44px), env(safe-area-inset-bottom, 0px));
-  padding-left: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-left, 0px)); padding-right: clamp(20px, 4vw, 64px);
-}
-.entrada-col > .rot { font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
-.entrada-centro { align-self: center; display: grid; gap: 30px; width: 100%; max-width: 420px; }
-.entrada-cab { display: grid; gap: 14px; }
+/* Entrar: "Sello en seco" con marco de acta. La pantalla entera es la portada de un documento:
+   cabecera y pie a todo el ancho; en medio, el formulario y el sello en relieve, en la misma hoja de papel. */
+.entrada { display: grid; grid-template-columns: minmax(380px, 5fr) 7fr; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 100svh; background: var(--surface); }
+
+/* Cabecera y pie del documento */
+.entrada-cab-doc, .entrada-pie-doc { grid-column: 1 / -1; min-width: 0; padding-left: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-right, 0px)); }
+.entrada-cab-doc { padding-top: max(clamp(16px, 2.6vh, 28px), env(safe-area-inset-top, 0px)); }
+.entrada-pie-doc { padding-bottom: max(clamp(14px, 2.4vh, 24px), env(safe-area-inset-bottom, 0px)); }
+.entrada-cab-t { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 10px; font-size: 12.5px; color: var(--muted); }
+.entrada-cab-t .m { font: 500 16px var(--f-acc); color: var(--ink); }
+.entrada-regla { display: block; height: 1.5px; background: var(--ink); transform-origin: 0 50%; }
+.entrada-regla.fina { height: 1px; background: var(--line); }
+.entrada-pie-t { display: flex; justify-content: space-between; gap: 16px; padding-top: 10px; font-size: 12px; color: var(--muted); }
+
+/* El formulario */
+.entrada-col { display: grid; min-width: 0; padding-block: clamp(20px, 4vh, 40px); padding-left: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-left, 0px)); padding-right: clamp(20px, 4vw, 64px); }
+.entrada-centro { align-self: center; display: grid; gap: 34px; width: 100%; max-width: 470px; }
+.entrada-cab { display: grid; gap: 18px; }
+.entrada-rot { font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
 /* Fuente de acento como remate de marca. Titular por encima de 40 px: tracking negativo. */
-.marca-grande { font: 500 clamp(4rem, 7.2vw, 6.6rem)/.92 var(--f-acc); letter-spacing: -.026em; overflow: hidden; padding-bottom: .06em; }
-.entrada-lead { font-size: 1.0625rem; line-height: 1.5; max-width: 40ch; color: var(--muted); }
+.marca-grande { font: 500 clamp(4.6rem, 8.6vw, 9.2rem)/.86 var(--f-acc); letter-spacing: -.032em; overflow: hidden; padding-bottom: .06em; }
+.entrada-lead { font-size: 1.0625rem; line-height: 1.5; max-width: 42ch; color: var(--muted); }
 .entrada-lead b { color: var(--ink); font-weight: 600; }
-.entrada-form { display: grid; gap: 16px; }
-.entrada-form .campo-w label { font-size: 14.5px; }
-.entrada-form .campo { height: 48px; padding: 0 13px; background: var(--surface); font-size: 16px; transition: border-color var(--d-state) linear; }
-.entrada-form .campo:hover { border-color: var(--muted); }
-.entrada-form .campo:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
-.entrada-form .campo[aria-invalid="true"] { border-color: var(--alert); }
-.entrada-form .btn { height: 50px; width: 100%; font-size: 15.5px; }
+.entrada-form { display: grid; gap: 22px; }
+/* Campos como líneas de un formulario impreso; al enfocarlos, la línea se llena de acento */
+.entrada-form .campo-w label { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.entrada-form .linea { position: relative; display: block; }
+.entrada-form .campo { height: auto; padding: 4px 0 8px; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; font-size: 1.1875rem; }
+.entrada-form .campo:focus { outline: none; }
+.entrada-form .campo[aria-invalid="true"] { border-bottom-color: var(--alert); }
+.entrada-form .linea::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--d-move) var(--e-in); pointer-events: none; }
+.entrada-form .linea:focus-within::after { transform: scaleX(1); }
+.entrada-form .btn { height: 50px; width: 100%; font-size: 15.5px; margin-top: 6px; }
 .entrada-nota { font-size: 13.5px; color: var(--muted); }
-.entrada-colofon { font-size: 12px; color: var(--muted); letter-spacing: .01em; }
 
 /* El sello: el canvas ocupa todo el panel; el pie va abajo, en el margen que deja el encuadre */
 .entrada-sello { position: relative; min-height: 440px; overflow: hidden; }
 .entrada-raya { position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--line); transform-origin: 50% 0; }
 .relieve.relieve-panel { position: absolute; inset: 0; width: auto; aspect-ratio: auto; justify-self: stretch; }
 .relieve-panel .relieve-plano { position: absolute; inset: 0; display: grid; place-items: center; }
-.entrada-plano { width: min(78%, 74svh); }
-.entrada-pie { position: absolute; left: clamp(20px, 3vw, 44px); right: clamp(20px, 3vw, 44px); bottom: max(clamp(16px, 3vh, 32px), env(safe-area-inset-bottom, 0px)); display: flex; gap: 12px; align-items: baseline; font-size: 13.5px; color: var(--muted); min-height: 1.5em; }
+/* Sin WebGL, el sello plano también se queda torcido */
+.entrada-plano { width: min(78%, 70svh); transform: rotate(-7deg); }
+.entrada-pie { position: absolute; left: clamp(20px, 3vw, 44px); right: clamp(20px, 3vw, 44px); bottom: clamp(12px, 2vh, 22px); display: flex; gap: 12px; align-items: baseline; font-size: 13.5px; color: var(--muted); min-height: 1.5em; }
 .entrada-pie b { color: var(--ink); font-weight: 600; white-space: nowrap; }
 
 @media (max-width: 860px) {
-  .entrada { grid-template-columns: minmax(0, 1fr); }
-  .entrada-col { padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-top: 24px; }
-  .entrada-centro { gap: 24px; }
+  .entrada { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .entrada-cab-doc { order: -2; }
   .entrada-sello { order: -1; min-height: 0; height: min(46svh, 330px); border-bottom: 1px solid var(--line); }
+  .entrada-pie-doc { order: 1; }
+  .entrada-medio, .entrada-pie-t span:last-child { display: none; }
+  .entrada-col { padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-top: 24px; }
+  .entrada-centro { gap: 26px; }
   .entrada-raya { display: none; }
-  /* En móvil el pie va debajo del sello, no encima */
-  .relieve.relieve-panel { bottom: 58px; top: env(safe-area-inset-top, 0px); }
+  /* En móvil el pie del sello va debajo, no encima */
+  .relieve.relieve-panel { bottom: 58px; }
   .entrada-plano { width: min(84%, 290px); }
   .entrada-pie { font-size: 12.5px; bottom: 12px; }
-  .marca-grande { font-size: clamp(3.4rem, 15vw, 4.6rem); }
+  .marca-grande { font-size: clamp(3.8rem, 17vw, 5.4rem); }
 }

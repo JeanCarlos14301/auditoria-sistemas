@@ -15,6 +15,8 @@ export interface OpcionesRelieve {
   zona?: HTMLElement;
   /** Cuánto se inclina el sello hacia el puntero. */
   inclinacion?: number;
+  /** Giro final del sello en radianes (un sello de verdad nunca queda recto). Al componerse o estamparse, cae girado y se asienta en él. */
+  giro?: number;
 }
 export interface Escena {
   /** Lleva el relieve a su estado: desde cero (los trazos emergen uno a uno) o desde donde esté. */
@@ -38,7 +40,7 @@ const DIAMETRO = 3.08, TAN = Math.tan((13 * Math.PI) / 180);
 export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos: DatosRelieve, op: OpcionesRelieve = {}): Escena {
   const N = datos.tipos.length, raiz = document.documentElement;
   // Por defecto, el encuadre de siempre: el sello llena el 88 % de una caja cuadrada
-  const encuadre = op.encuadre ?? 0.878, zona = op.zona ?? caja, inclinacion = op.inclinacion ?? 0.32;
+  const encuadre = op.encuadre ?? 0.878, zona = op.zona ?? caja, inclinacion = op.inclinacion ?? 0.32, giroFinal = op.giro ?? 0;
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));   // nunca más de 2
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -82,7 +84,7 @@ export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos:
   }
 
   // Objetos planos que anima anime.js; three solo los lee
-  const alt = datos.tipos.map(() => ({ a: 0 })), ros = { a: 0 }, letras = { a: 0 }, gr = { s: 1 }, destello = { l: 0 };
+  const alt = datos.tipos.map(() => ({ a: 0 })), ros = { a: 0 }, letras = { a: 0 }, gr = { s: 1 }, destello = { l: 0 }, giro = { z: giroFinal };
   const REPOSO = { rx: 0, ry: 0, lx: -1.7, ly: 2.1 }, meta = { ...REPOSO }, cur = { ...REPOSO };
   let raf = 0, tPuntero = -1e9, linea: Timeline | null = null, relieveTexto = 9, enVista = false, rota: number | null = null, vivo = true, luzBase = 3.4;
 
@@ -90,7 +92,7 @@ export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos:
     geo.forEach((g, i) => { pos.set(g.x, g.y, 0.03); quat.setFromAxisAngle(ejeZ, -g.a); esc.set(g.ancho, g.largo, Math.max(0.001, alt[i]!.a * 0.17)); m4.compose(pos, quat, esc); trazos.setMatrixAt(i, m4); });
     trazos.instanceMatrix.needsUpdate = true;
     roseta.scale.z = Math.max(0.001, ros.a * 2.6); roseta.visible = ros.a > 0.01; caraMat.bumpScale = letras.a * relieveTexto;
-    grupo.rotation.set(cur.rx, cur.ry, 0); grupo.scale.setScalar(gr.s); luz.position.set(cur.lx, cur.ly, 2.1); luz.intensity = luzBase * (1 + destello.l);
+    grupo.rotation.set(cur.rx, cur.ry, giro.z); grupo.scale.setScalar(gr.s); luz.position.set(cur.lx, cur.ly, 2.1); luz.intensity = luzBase * (1 + destello.l);
     renderer.render(scene, cam);
     canvas.dataset.triangulos = String(renderer.info.render.triangles);
   }
@@ -109,13 +111,21 @@ export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos:
   function animar(desdeCero: boolean) {
     // cancel(), no pause(): con una línea en pausa sobre los mismos objetos, anime.js deja sin mover los trazos que aún no habían empezado
     linea?.cancel();
-    if (prefersReducedMotion()) { alt.forEach((o, i) => { o.a = objetivo(i); }); ros.a = rota !== null ? 0 : 1; letras.a = 1; gr.s = 1; despertar(); return; }
+    if (prefersReducedMotion()) { alt.forEach((o, i) => { o.a = objetivo(i); }); ros.a = rota !== null ? 0 : 1; letras.a = 1; gr.s = 1; giro.z = giroFinal; despertar(); return; }
     if (desdeCero) { alt.forEach(o => { o.a = 0; }); ros.a = 0; letras.a = 0; }
-    linea = createTimeline({ onComplete: () => { if (desdeCero && rota === null) resorte(1.1, 1, { type: 'spring', stiffness: 360, damping: 11, onUpdate: v => { gr.s = v; } }); } })
+    linea = createTimeline({ onComplete: () => {
+      if (desdeCero && rota === null) resorte(1.1, 1, { type: 'spring', stiffness: 360, damping: 11, onUpdate: v => { gr.s = v; } });
+      asentar(desdeCero ? 0.3 : 0);
+    } })
       .add(alt, { a: (_?: unknown, i?: number) => objetivo(i ?? 0), duration: 560, ease: desdeCero ? 'outBack' : 'inOutQuad', delay: stagger(desdeCero ? PASO_TRAZO : 26, { from: desdeCero || rota === null ? 'first' : rota - 1 }) })
       .add(ros, { a: rota !== null ? 0 : 1, duration: 800, ease: 'outExpo' }, desdeCero ? '-=400' : 0)
       .add(letras, { a: 1, duration: 700, ease: 'outExpo' }, desdeCero ? '-=700' : 0);
     despertar();
+  }
+  /** El sello cae girado `desvio` radianes de más y se asienta en su giro final con un resorte. */
+  function asentar(desvio: number) {
+    if (!giroFinal || !desvio) { giro.z = giroFinal; return; }
+    resorte(giroFinal - desvio, giroFinal, { type: 'spring', stiffness: 260, damping: 14, onUpdate: v => { giro.z = v; } });
   }
   function tema() {
     const c = getComputedStyle(raiz).getPropertyValue('--surface').trim();
@@ -157,6 +167,7 @@ export function crearEscena(canvas: HTMLCanvasElement, caja: HTMLElement, datos:
         linea = createTimeline({ onComplete: () => {
           resorte(0.93, 1, { type: 'spring', stiffness: 340, damping: 11, onUpdate: v => { gr.s = v; } });
           moverObjeto(destello, { l: [0.9, 0], duration: 900, ease: 'outExpo' });
+          asentar(0.22);
           listo();
         } })
           .add(alt, { a: (_?: unknown, i?: number) => objetivo(i ?? 0), duration: 380, ease: 'outBack', delay: stagger(12) })

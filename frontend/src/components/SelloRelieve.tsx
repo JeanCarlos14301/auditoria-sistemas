@@ -17,6 +17,8 @@ interface Props {
   /** Zona donde la luz sigue al puntero; por defecto, la caja del sello. */
   zona?: RefObject<HTMLElement>;
   inclinacion?: number;
+  /** Giro final del sello, en radianes. */
+  giro?: number;
   /** El relieve ya está a la vista y empieza a componerse (no se llama si se queda el sello plano). */
   onListo?: () => void;
   /** El sello plano: se muestra mientras three.js se descarga y se queda si no hay WebGL. */
@@ -35,7 +37,7 @@ export interface ControlRelieve {
  * y el resto de la página sigue funcionando.
  */
 export const SelloRelieve = forwardRef<ControlRelieve, Props>(function SelloRelieve(
-  { tipos, hashFinal, cifra, orla, ruptura, pulso = 0, className, encuadre, zona, inclinacion, onListo, children }, ref,
+  { tipos, hashFinal, cifra, orla, ruptura, pulso = 0, className, encuadre, zona, inclinacion, giro, onListo, children }, ref,
 ) {
   const caja = useRef<HTMLDivElement>(null), canvas = useRef<HTMLCanvasElement>(null);
   const escena = useRef<Escena | null>(null);
@@ -44,8 +46,8 @@ export const SelloRelieve = forwardRef<ControlRelieve, Props>(function SelloReli
   const datos = useRef({ ruptura, orla });
   datos.current = { ruptura, orla };
   // Opciones y aviso, leídos al crear la escena: cambiarlos después no la reconstruye
-  const opciones = useRef({ encuadre, zona, inclinacion, onListo });
-  opciones.current = { encuadre, zona, inclinacion, onListo };
+  const opciones = useRef({ encuadre, zona, inclinacion, giro, onListo });
+  opciones.current = { encuadre, zona, inclinacion, giro, onListo };
 
   useImperativeHandle(ref, () => ({
     estampar: () => escena.current?.estampar() ?? Promise.resolve(),
@@ -64,7 +66,7 @@ export const SelloRelieve = forwardRef<ControlRelieve, Props>(function SelloReli
         if (!vivo) return;
         const o = opciones.current;
         const e = crearEscena(lienzo, el, { tipos, hashFinal, cifra, orla: datos.current.orla, lema: datos.current.ruptura === null ? 'ÍNTEGRA' : 'NO ÍNTEGRA' },
-          { encuadre: o.encuadre, zona: o.zona?.current ?? undefined, inclinacion: o.inclinacion });
+          { encuadre: o.encuadre, zona: o.zona?.current ?? undefined, inclinacion: o.inclinacion, giro: o.giro });
         if (datos.current.ruptura !== null) e.ruptura(datos.current.ruptura, datos.current.orla, 'NO ÍNTEGRA');
         escena.current = e; primera.current = true; setListo(true);
         e.visible(true); e.animar(true);

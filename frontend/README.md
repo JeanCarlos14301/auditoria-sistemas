@@ -32,7 +32,7 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 
 | Ruta | Pantalla |
 |---|---|
-| `/login` | **Entrar**: a pantalla completa, junto al formulario, el sello en relieve de una auditoría de ejemplo se compone mientras el pie cuenta cada evento; la luz sigue al cursor y, al entrar, el sello se vuelve a estampar |
+| `/login` | **Entrar**: la pantalla entera es la portada de un acta. Junto al formulario, el sello en relieve de una auditoría de ejemplo se compone mientras el pie cuenta cada evento; la luz sigue al cursor y, al entrar, el sello se vuelve a estampar y la hoja se archiva |
 | `/auditorias` | **Índice**: filtro por estado y orden, con las filas recolocándose; cada fila dibuja su paso por los estados y su cumplimiento |
 | `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
