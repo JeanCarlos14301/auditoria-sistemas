@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { animate as animar, stagger } from 'animejs';
 import type { ControlISO, Evaluacion } from '../api/types';
 import { NOMBRE_EVALUACION } from '../lib/format';
+import { sinEvaluar } from '../lib/traza';
 import { moverIndicador } from '../motion/efectos';
 import { CURVA, Flip, gsap } from '../motion/gsap';
 import { prefersReducedMotion } from '../motion/motion';
@@ -97,8 +98,8 @@ export function Postura({ evaluaciones }: { evaluaciones: readonly Evaluacion[] 
             <p className="sub num">{fichas.filter(f => f.ev.estado === 'IMPLEMENTADO').length} de {fichas.length} implementados</p>
             <div className="tiles">
               {fichas.map(({ ev, id }) => (
-                <span className="tile" key={id} data-flip-id={`c${id}`} title={`${ev.control.nombre}: ${NOMBRE_EVALUACION[ev.estado]}`}>
-                  <Marca estado={ev.estado} /><span className="num">{ev.control.codigo_iso}</span>
+                <span className="tile" key={id} data-flip-id={`c${id}`} title={`${ev.control.nombre}: ${sinEvaluar(ev) ? 'Por evaluar' : NOMBRE_EVALUACION[ev.estado]}`}>
+                  <Marca estado={sinEvaluar(ev) ? 'PEND' : ev.estado} /><span className="num">{ev.control.codigo_iso}</span>
                 </span>
               ))}
             </div>

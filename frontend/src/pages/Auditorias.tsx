@@ -1,8 +1,9 @@
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuditorias } from '../api/queries';
 import type { AuditoriaListado, EstadoAuditoria } from '../api/types';
 import { Cargando, ErrorPagina } from '../components/estados-pagina';
+import { Resaltado, normal } from '../components/Resaltado';
 import { ESTADOS_AUDITORIA, NOMBRE_ESTADO, fecha, pct, plural } from '../lib/format';
 import { CountUp } from '../motion/CountUp';
 import { cascada, moverIndicador } from '../motion/efectos';
@@ -29,15 +30,6 @@ export default function Auditorias() {
   if (q.isPending) return <Cargando />;
   if (q.isError) return <ErrorPagina error={q.error} />;
   return <Indice auditorias={q.data} />;
-}
-
-/** Sin tildes ni mayúsculas, para buscar como se escribe. */
-const normal = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-/** Resalta la coincidencia con la búsqueda. */
-function Resaltado({ texto, q }: { texto: string; q: string }): ReactNode {
-  const i = q ? normal(texto).indexOf(normal(q)) : -1;
-  if (i < 0) return texto;
-  return <>{texto.slice(0, i)}<mark>{texto.slice(i, i + q.length)}</mark>{texto.slice(i + q.length)}</>;
 }
 
 /**

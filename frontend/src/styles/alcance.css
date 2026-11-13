@@ -1,63 +1,144 @@
-/* Nueva auditoría y alcance: la hoja en Borrador */
-.nv-form { display: grid; gap: 14px; margin-top: 8px; }
-/* El nombre de la organización se escribe donde luego irá el título de la hoja */
-.titulo-input { display: block; font-family: var(--f-acc); font-weight: 500; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -.01em; line-height: 1.15; border-bottom: 1px dashed var(--muted); background: none; color: var(--ink); padding: 2px 0 6px; width: 100%; }
-.titulo-input::placeholder { color: var(--na); }
-.titulo-input[aria-invalid="true"] { border-bottom-color: var(--alert); }
-/* Antes de crearla, la auditoría todavía no está en ningún estado */
-.estados-sin .estados-marca { opacity: 0; }
-.estados-sin li[aria-current] { color: var(--muted); font-weight: 400; }
+/* El alcance (pages/Alcance.tsx) y la nueva auditoría (pages/NuevaAuditoria.tsx): la hoja en Borrador. */
 
-.filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-.filtros button { padding: 6px 10px; cursor: pointer; color: var(--muted); border-radius: var(--r); }
-.filtros button[aria-pressed="true"] { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--ink); }
-.filtros button:disabled { opacity: .4; cursor: not-allowed; }
-.filtros .sep { flex: 1; }
-/* --f: cuánto está fijado el control (0 borrador, 1 fijado), igual que las filas del acta */
-.ctl { position: relative; background: var(--surface); --i: 0; --f: clamp(0, calc(var(--pa) * var(--n) - var(--i)), 1); }
-.ctl::before, .ctl::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
-.ctl::before { border-bottom: 1px dashed var(--muted); opacity: calc((1 - var(--f)) * .6); }
-.ctl::after { border-bottom: 1px solid var(--line); opacity: var(--f); }
-.ctl label { display: grid; grid-template-columns: 22px 3.1em minmax(0, 1.6fr) minmax(0, 1fr); gap: 0 12px; align-items: center; padding: var(--row) 0; min-height: 44px; cursor: pointer; }
-.ctl input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
-.ctl .cod { font-weight: 600; }
-.ctl .nom, .ctl .cod { color: var(--muted); }
-.ctl input:checked ~ .nom, .ctl input:checked ~ .cod { color: var(--ink); }
-.ctl .tema { color: var(--muted); }
-.fijado .ctl label { grid-template-columns: 3.1em minmax(0, 1.6fr) minmax(0, 1fr); cursor: default; }
-.fijado .ctl input { display: none; }
+/* ── Alcance: el catálogo y, al lado, la hoja con los elegidos ── */
+.al { display: grid; gap: 22px; --p: 0; }
+.al > * { min-width: 0; }
+.al mark { background: var(--tint); color: inherit; box-shadow: inset 0 -1.5px 0 var(--accent); }
+.al-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(290px, 350px); gap: 0 clamp(28px, 4vw, 64px); align-items: start; }
+.al-cuerpo > * { min-width: 0; }
+.al-herr { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
+.buscar { position: relative; display: flex; align-items: center; gap: 10px; flex: 1 1 240px; max-width: 440px; min-width: 0; }
+.buscar input { min-width: 0; width: 100%; height: 42px; padding: 0 2px 2px; border: 0; border-bottom: 1px solid var(--ink); border-radius: 0; background: transparent; color: var(--ink); font-size: 16px; }
+.buscar input:focus { outline: none; }
+.buscar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--d-move) var(--e-in); pointer-events: none; }
+.buscar:focus-within::after { transform: scaleX(1); }
+.al-cat { position: relative; }
+.ag-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 22px 0 8px; border-bottom: 1.5px solid var(--ink); }
+.ag-cab b { font-weight: 600; font-size: 1.0625rem; }
+.ag-cab b .num { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.ag-cab .enlace { font-size: 13.5px; white-space: nowrap; }
+/* En Borrador las filas van en línea discontinua; al confirmar, la platina las fija una a una (--f) */
+.al-f { position: relative; --i: 0; --f: clamp(0, calc(var(--p) * var(--n) * 1.15 - var(--i)), 1); }
+.al-f::before, .al-f::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.al-f::before { border-bottom: 1px dashed var(--muted); opacity: calc((1 - var(--f)) * .6); }
+.al-f::after { border-bottom: 1px solid var(--line); opacity: var(--f); }
+.al-f label { display: grid; grid-template-columns: 20px 3em minmax(0, 1fr) minmax(140px, 200px); gap: 3px 14px; margin: 0; padding: 14px 8px 14px 6px; font-weight: 400; cursor: pointer; align-items: start; transition: background-color var(--d-state) linear; }
+.al-f label:hover { background: var(--raise); }
+.al-f.on label { background: var(--tint); }
+.al-f input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.chk { width: 18px; height: 18px; margin-top: 2px; border: 1.5px solid var(--muted); border-radius: 2px; display: grid; place-items: center; transition: background-color var(--d-state) linear, border-color var(--d-state) linear; }
+.chk svg { width: 12px; height: 12px; overflow: visible; }
+.chk path { fill: none; stroke: var(--on-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset 260ms var(--e-in); }
+.al-f input:checked + .chk { background: var(--accent); border-color: var(--accent); }
+.al-f input:checked + .chk path { stroke-dashoffset: 0; }
+.al-f input:focus-visible + .chk { outline: 2px solid var(--accent); outline-offset: 2px; }
+.al-f input:disabled + .chk { opacity: .5; }
+.al-f .cod { font-weight: 600; }
+.al-f .nom { font-weight: 500; }
+.al-f .crit { grid-column: 3; font-size: 13.5px; line-height: 1.45; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.al-f .attr { grid-column: 4; grid-row: 1 / span 2; font-size: 13px; line-height: 1.45; color: var(--muted); text-align: right; }
+.fijado .al-f label { grid-template-columns: 3em minmax(0, 1fr) minmax(140px, 200px); cursor: default; }
+.fijado .al-f label:hover, .fijado .al-f.on label { background: none; }
+.fijado .chk { display: none; }
+.fijado .al-f .crit { grid-column: 2; }
+.fijado .al-f .attr { grid-column: 3; }
+/* La platina baja por los elegidos mientras se fijan; --alto lo mide el JS al empezar */
+.al-platina { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--accent); transform: translateY(calc(var(--p) * var(--alto, 0px))); opacity: calc(min(1, var(--p) * 12) * (1 - max(0, var(--p) * 12 - 11))); pointer-events: none; }
 
-/* El contador de 10 a 15: quince casillas, siempre a la vista */
-.medidor { position: sticky; bottom: 0; z-index: 2; background: var(--surface); border-top: 1.5px solid var(--ink); padding: 16px 0 max(14px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px 32px; align-items: center; }
+/* La hoja de los elegidos: el contador de 10 a 15, la lista y la confirmación */
+.al-hoja { position: sticky; top: calc(var(--barra) + 14px); display: grid; gap: 16px; }
+.ah-cuenta { display: flex; align-items: baseline; gap: 10px; font-size: 15px; color: var(--muted); }
+.ah-n { display: inline-block; font: 500 3.4rem/1 var(--f-acc); color: var(--ink); letter-spacing: -.02em; }
 .slots-w { position: relative; padding-top: 12px; }
 .slots { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 3px; }
-.slot { position: relative; height: 22px; background: var(--raise); display: grid; place-items: center; overflow: hidden; }
+.slot { position: relative; height: 20px; background: var(--raise); overflow: hidden; }
 .slot b, .slot em { position: absolute; inset: 0; }
 .slot b { background: var(--ink); transform: scaleY(0); transform-origin: 50% 100%; transition: transform var(--d-state) var(--e-st); }
 .slot.on b { transform: scaleY(1); }
 /* Al entrar en el tramo válido, las casillas llenas pasan al acento en onda desde la décima (--w es la distancia a ella) */
 .slot em { background: var(--accent); opacity: 0; transition: opacity 220ms linear; }
 .slots.ok .slot.on em { opacity: 1; transition-delay: calc(var(--w) * 40ms); }
-.slot span { position: relative; z-index: 1; font-size: 9.5px; font-weight: 600; color: var(--surface); opacity: 0; font-variant-numeric: tabular-nums; }
-.slot.on span { opacity: 1; }
 /* La llave marca el tramo válido, de la casilla 10 a la 15 */
 .llave { position: absolute; top: 0; left: calc(9 / 15 * 100% + 1px); right: 0; height: 9px; }
-.llave svg { width: 100%; height: 100%; overflow: visible; }
+.llave svg { width: 100%; height: 100%; overflow: visible; display: block; }
 .llave path { fill: none; stroke: var(--muted); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 .llave .viva { stroke: var(--accent); stroke-width: 2.5; opacity: 0; }
 .slots-w.ok .llave .viva { opacity: 1; }
 .escala { position: relative; height: 18px; font-size: 11.5px; color: var(--muted); }
 .escala span { position: absolute; top: 3px; transform: translateX(-50%); }
-.medidor-txt { display: grid; gap: 8px; justify-items: start; }
-.cuenta-n { display: inline-block; font-family: var(--f-acc); font-weight: 500; font-size: 2rem; line-height: 1; vertical-align: -.12em; margin-right: 6px; }
-/* La ficha que viaja del control a su casilla */
-.ficha { position: fixed; left: 0; top: 0; z-index: 70; background: var(--ink); color: var(--surface); padding: 1px 6px; font-size: 11.5px; font-weight: 600; border-radius: 2px; pointer-events: none; font-variant-numeric: tabular-nums; }
-@media (max-width: 760px) {
-  .ctl label { grid-template-columns: 22px 2.9em minmax(0, 1fr); row-gap: 2px; }
-  .ctl .tema { grid-column: 3; }
-  .fijado .ctl label { grid-template-columns: 2.9em minmax(0, 1fr); }
-  .fijado .ctl .tema { grid-column: 2; }
-  .medidor { grid-template-columns: 1fr; }
-  .slot { height: 16px; }
-  .slot span { display: none; }
+.ah-msg { font-size: 14.5px; }
+.ah-msg.ok { color: var(--accent); font-weight: 600; }
+.ah-sel { display: grid; max-height: max(160px, calc(100svh - var(--barra) - 470px)); overflow-y: auto; scrollbar-width: thin; border-top: 1px solid var(--line); }
+.ah-i { display: grid; grid-template-columns: 3em minmax(0, 1fr) 30px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.ah-i .cod { font-weight: 600; }
+.ah-i.llegando { opacity: 0; }
+.ah-x { width: 30px; height: 30px; display: grid; place-items: center; color: var(--muted); border-radius: var(--r); font-size: 17px; cursor: pointer; }
+.ah-x:hover { color: var(--ink); background: var(--raise); }
+.al-hoja.fijado .ah-x { visibility: hidden; }
+.ah-vacio { color: var(--muted); font-size: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.ah-acc { display: grid; gap: 10px; justify-items: start; }
+.ah-acc .btn { padding: 10px 18px; }
+.ah-nota { font-size: 13px; color: var(--muted); max-width: 40ch; }
+/* La ficha que viaja del control a la hoja */
+.ficha { position: fixed; left: 0; top: 0; z-index: 70; background: var(--ink); color: var(--surface); padding: 1px 6px; font-size: 12px; font-weight: 600; border-radius: 2px; pointer-events: none; font-variant-numeric: tabular-nums; }
+
+/* ── Nueva auditoría: se escribe donde irá su cabecera ── */
+.nv { display: grid; gap: 36px; }
+.nv-cab { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 48px; align-items: end; }
+.nv-cab > * { min-width: 0; }
+.nv-a { display: grid; gap: 16px; max-width: 900px; }
+.nv-campo-w { display: grid; gap: 4px; }
+.nv-campo { position: relative; display: grid; gap: 2px; }
+.nv-campo .rot { font-size: 11px; transition: opacity var(--d-state) linear; }
+.nv-in { width: 100%; border: 0; border-bottom: 1px dashed var(--muted); border-radius: 0; background: none; color: var(--ink); transition: border-color 400ms linear; }
+.nv-in:focus { outline: none; }
+.nv-linea { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--d-move) var(--e-in); pointer-events: none; }
+.nv-campo:focus-within .nv-linea { transform: scaleX(1); }
+.nv-campo.mal .nv-linea { background: var(--alert); transform: scaleX(1); }
+.nv-org { font: 500 clamp(1.9rem, 3vw, 2.7rem)/1.12 var(--f-acc); letter-spacing: -.012em; padding: 2px 0 8px; }
+.nv-org::placeholder, .nv-alc::placeholder { color: var(--na); }
+.nv-alc { font-size: 16.5px; line-height: 1.5; padding: 4px 0 8px; resize: none; overflow: hidden; min-height: 2.6em; display: block; }
+.nv-fechas { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 22px; }
+.nv-f { min-width: 150px; }
+.nv-f .nv-in { font-size: 16px; padding: 6px 0 7px; min-height: 40px; }
+.nv-dur { padding-bottom: 9px; color: var(--muted); font-size: 15px; }
+.nv-aud { color: var(--muted); font-size: 15px; }
+.nv-aud b { color: var(--ink); font-weight: 500; }
+.fase.prox b { color: var(--ink); }
+.nv-pasos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 40px; padding-top: 22px; border-top: 1px solid var(--line); }
+.paso b { font: 500 1.9rem/1 var(--f-acc); color: var(--muted); }
+.paso h3 { font-size: 15.5px; margin-top: 10px; }
+.paso p { font-size: 14px; color: var(--muted); margin-top: 4px; max-width: 38ch; }
+.nv-acc { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+.nv-acc .btn { padding: 10px 20px; }
+.nv .pestanas-w { margin-top: 0; }
+/* Creada: los campos dejan de ser borrador y se quedan como la cabecera; lo demás se retira */
+.nv.creada .nv-in { border-bottom-color: transparent; }
+.nv.creada .nv-linea { transform: scaleX(0); }
+.nv.creada .nv-campo .rot, .nv.creada .nv-aud, .nv.creada .nv-dur, .nv.creada .nv-pasos, .nv.creada .nv-acc { opacity: 0; transition: opacity 350ms linear 200ms; }
+
+@media (max-width: 960px) {
+  .al-cuerpo { grid-template-columns: minmax(0, 1fr); }
+  /* La hoja de los elegidos baja a una franja fija: cuántos, las casillas y confirmar */
+  .al-hoja { position: sticky; top: auto; bottom: 0; z-index: 30; background: var(--surface); border-top: 1.5px solid var(--ink); padding: 12px 0 max(12px, env(safe-area-inset-bottom, 0px)); grid-template-columns: auto minmax(0, 1fr); gap: 8px 18px; align-items: center; margin-top: 8px; }
+  .ah-tit, .ah-sel, .ah-nota, .ah-volver { display: none; }
+  .ah-n { font-size: 2.4rem; }
+  .ah-cuenta { font-size: 13.5px; gap: 6px; }
+  .ah-medidor { grid-column: 2; }
+  .ah-msg, .ah-acc, .al-hoja .error { grid-column: 1 / -1; }
+  .ah-msg { font-size: 13.5px; }
+  .ah-acc .btn { width: 100%; }
+  .slot { height: 14px; }
+}
+@media (max-width: 860px) {
+  .al-f label { grid-template-columns: 20px 2.8em minmax(0, 1fr); }
+  .al-f .attr { grid-column: 3; grid-row: auto; text-align: left; }
+  .fijado .al-f label { grid-template-columns: 2.8em minmax(0, 1fr); }
+  .fijado .al-f .attr, .fijado .al-f .crit { grid-column: 2; }
+  .nv-cab { grid-template-columns: minmax(0, 1fr); }
+  .nv-org { font-size: 1.6rem; }
+  .nv-pasos { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .paso { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); column-gap: 12px; }
+  .paso b { grid-row: span 2; font-size: 1.5rem; }
+  .paso h3 { margin-top: 0; }
 }
