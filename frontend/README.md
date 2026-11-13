@@ -33,11 +33,11 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 | Ruta | Pantalla |
 |---|---|
 | `/login` | **Entrar**: la pantalla entera es la portada de un acta. Junto al formulario, el sello en relieve de una auditoría de ejemplo se compone mientras el pie cuenta cada evento; la luz sigue al cursor y, al entrar, el sello se vuelve a estampar y la hoja se archiva |
-| `/auditorias` | **Índice**: filtro por estado y orden, con las filas recolocándose; cada fila dibuja su paso por los estados y su cumplimiento |
+| `/auditorias` | **Índice**: los filtros son el resumen (cuántas hay en cada estado); búsqueda por organización o alcance, sin tildes y con la coincidencia resaltada; con «Todas», agrupadas por lo que toca hacer (primero las que están en revisión) y cada fila dice su siguiente paso y lleva a él. Al filtrar, ordenar o buscar, las filas viajan a su sitio |
 | `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
 | `/auditorias/:id` | **Trabajo**: evaluar controles, registrar evidencias, hallazgos y recomendaciones, métricas y postura por atributo |
-| `/auditorias/:id/cierre` | **Revisión y cierre**: la traza de cada control y la puerta de cierre. Ya cerrada, **el acta**: empieza por el resultado (cumplimiento sellado, veredicto de integridad, imprimir el informe y el sello en relieve) y sigue con los controles por cláusula, los hallazgos del más grave al menos y la postura por atributo, con un índice en el margen |
+| `/auditorias/:id/cierre` | **Revisión y cierre**: una sola tabla con la traza de cada control (evidencia, hallazgo, recomendación), agrupada por cláusula. Por defecto enseña solo lo pendiente: cada anomalía que informa la API va en su fila, con el formulario para resolverla ahí mismo; al guardar, la fila se completa y una señal baja a la puerta de cierre, fija abajo, que cuenta las trazas completas y se abre cuando la API dice que se puede cerrar. Al mantener pulsado, la platina recorre la tabla fijando cada fila y la vista pasa al acta. Ya cerrada, **el acta**: empieza por el resultado (cumplimiento sellado, veredicto de integridad, imprimir el informe y el sello en relieve) y sigue con los controles por cláusula, los hallazgos del más grave al menos y la postura por atributo, con un índice en el margen |
 | `/auditorias/:id/historia` | **Historia**: la bitácora se reproduce eslabón a eslabón |
 | `/auditorias/:id/informe` | **Informe para imprimir** (RF08), solo con la auditoría cerrada: las hojas A4 tal como salen, con la huella del informe al pie de cada una |
 
@@ -98,7 +98,7 @@ src/
   motion/       curvas, movimiento reducido, tween de --p, CountUp, registro de GSAP y gestos comunes
   lib/          formato, lógica de la traza, geometría del sello, historia de la auditoría y paginador (con tests)
   components/   piezas comunes, formularios, sellos (plano, vivo y en relieve), historia, postura, contenido del informe
-  pages/        Login, Auditorias, NuevaAuditoria, AuditoriaLayout, Alcance, Trabajo, Cierre, Acta, HistoriaPagina, Informe
+  pages/        Login, Auditorias, NuevaAuditoria, AuditoriaLayout, Alcance, Trabajo, Cierre (Revision o Acta), HistoriaPagina, Informe
   styles/       tokens y estilos por pantalla
   assets/       bitácora de ejemplo para el sello de la entrada
 ```

@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { animate as resorte } from 'motion';
 import { prefersReducedMotion } from '../motion/motion';
 
 interface Props {
-  etiqueta: string;
+  etiqueta: ReactNode;
   disabled?: boolean;
   /** Progreso del gesto, de 0 a 1, en cada fotograma. */
   onProgreso: (h: number) => void;

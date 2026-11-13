@@ -1,24 +1,63 @@
-/* El índice de auditorías */
-.lista-cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
-.lista-cab h1 { font-family: var(--f-acc); font-weight: 500; font-size: clamp(1.7rem, 4vw, 2.2rem); letter-spacing: -.01em; line-height: 1.1; }
-.herramientas { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
-.lista li { border-top: 1px solid var(--line); background: var(--surface); }
-.lista a { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 9.5rem; gap: 4px 24px; align-items: center; padding: 14px 0; }
-.lista .org { display: block; font-weight: 600; font-size: var(--t-body); line-height: 1.3; }
-.lista .meta { display: block; color: var(--muted); }
-.lista .est { display: grid; gap: 5px; }
+/* El índice de auditorías (pages/Auditorias.tsx). Papel, sin tarjeta: filtros que son el resumen, búsqueda y grupos. */
+.ls { display: grid; gap: 22px; }
+.ls > * { min-width: 0; }
+.ls-cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px 24px; }
+.ls-tit { font: 500 clamp(2.2rem, 3.4vw, 3rem)/1 var(--f-acc); letter-spacing: -.016em; }
+.ls-cab .btn { padding: 11px 20px; }
+/* Los filtros son el resumen: cuántas hay en cada estado */
+.ls-filtros { position: relative; display: flex; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.ls-filtros::-webkit-scrollbar { display: none; }
+.lf { display: grid; gap: 2px; padding: 4px 0 12px; margin-right: clamp(22px, 3vw, 44px); color: var(--muted); white-space: nowrap; text-align: left; cursor: pointer; }
+.lf b { font: 500 clamp(1.7rem, 2.2vw, 2.2rem)/1 var(--f-acc); color: var(--ink); opacity: .55; transition: opacity var(--d-state) linear; }
+.lf span { font-size: 14px; }
+.lf[aria-pressed="true"] { color: var(--ink); }
+.lf[aria-pressed="true"] b, .lf:hover b { opacity: 1; }
+.lf-ind { position: absolute; left: 0; bottom: 0; height: 2.5px; width: 0; background: var(--accent); }
+.ls-herr { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
+.ls-buscar { position: relative; display: flex; align-items: center; gap: 10px; flex: 1 1 260px; max-width: 520px; min-width: 0; }
+.ls-buscar input { min-width: 0; width: 100%; height: 42px; padding: 0 2px 2px; border: 0; border-bottom: 1px solid var(--ink); background: transparent; color: var(--ink); font-size: 16px; }
+.ls-buscar input:focus { outline: none; }
+.ls-buscar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--d-move) var(--e-in); pointer-events: none; }
+.ls-buscar:focus-within::after { transform: scaleX(1); }
+.ls-grupos { display: grid; gap: 34px; }
+.ls-g { display: grid; }
+.ls-g-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); }
+.ls-g-cab h2 { font-size: 1.25rem; letter-spacing: .004em; }
+.ls-g-cab h2 .num { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.ls-g-cab p { color: var(--muted); font-size: 14px; }
+.ls-f { border-bottom: 1px solid var(--line); }
+.ls-a { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(170px, 1fr) 150px 170px; gap: 6px 28px; align-items: center; padding: 14px 6px; color: inherit; text-decoration: none; }
+.ls-a:hover { background: var(--raise); }
+.ls-id { display: grid; gap: 2px; min-width: 0; }
+.ls-id .org { font-weight: 600; font-size: 1.0625rem; }
+.ls-id .alc { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ls-id .meta { color: var(--muted); font-size: 13px; }
+.ls mark { background: var(--tint); color: inherit; box-shadow: inset 0 -1.5px 0 var(--accent); }
+.ls-est { display: grid; gap: 5px; font-size: 14px; }
 /* El paso de la auditoría por sus cuatro estados: los tramos se llenan en orden (--k) */
 .mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; max-width: 150px; }
 .mini i { height: 3px; background: var(--line); }
-.mini i.on::after { content: ""; display: block; height: 100%; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 260ms var(--e-st) calc(var(--k) * 150ms + 250ms); }
-.visto .mini i.on::after { transform: scaleX(1); }
-.lista .cumpl { display: grid; gap: 5px; justify-items: end; }
-.lista .pct { font-family: var(--f-acc); font-weight: 500; font-size: 1.5rem; line-height: 1; }
-.lista .linea { width: 100%; height: 3px; background: var(--raise); }
-.lista .linea i { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform 900ms var(--e-in) 300ms; }
-.visto .lista .linea i { transform: scaleX(var(--v)); }
-@media (max-width: 760px) {
-  .lista a { grid-template-columns: minmax(0, 1fr) auto; }
-  .lista .ident { grid-column: 1 / -1; }
-  .lista .cumpl { min-width: 6.5rem; }
+.mini i.on::after { content: ""; display: block; height: 100%; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 260ms var(--e-st) calc(var(--k) * 120ms + 200ms); }
+.ls.visto .mini i.on::after { transform: scaleX(1); }
+.ls-pct { display: grid; gap: 5px; justify-items: end; }
+.ls-pct > .num { font: 500 1.6rem/1 var(--f-acc); }
+.ls-pct .sin { font-size: 14px; color: var(--muted); }
+.ls-pct .linea { width: 100%; height: 3px; background: var(--raise); }
+.ls-pct .linea i { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: 0 50%; transition: transform 900ms var(--e-in) 250ms; }
+.ls.visto .ls-pct .linea i { transform: scaleX(var(--v)); }
+/* El siguiente paso: la línea se alarga al pasar por la fila */
+.ls-acc { justify-self: end; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14.5px; white-space: nowrap; }
+.ls-acc::after { content: ""; width: 14px; height: 1.5px; background: currentColor; transform: scaleX(.5); transform-origin: 0 50%; transition: transform var(--d-state) var(--e-st); }
+.ls-a:hover .ls-acc { color: var(--accent); }
+.ls-a:hover .ls-acc::after { transform: scaleX(1); }
+.ls-vacio { padding: 26px 0; color: var(--muted); font-size: 15px; }
+
+@media (max-width: 860px) {
+  .ls-a { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding-inline: 0; }
+  .ls-id { grid-column: 1 / -1; }
+  .ls-pct { grid-column: 2; grid-row: 2; }
+  .ls-acc { grid-column: 1 / -1; justify-self: start; }
+  /* Los tres órdenes caben enteros en 360 px, sin desplazarse */
+  .ls-herr .chips { width: 100%; }
+  .ls-herr .chip { flex: 1 1 auto; padding: 6px 7px; font-size: 13.5px; }
 }
