@@ -12,7 +12,8 @@
     "db:reset": "docker compose down -v && docker compose up -d",
     "admin:create": "tsx src/scripts/createAdmin.ts",
     "chain:verify": "tsx src/scripts/verifyChain.ts",
-    "test:qa": "tsx src/scripts/run-qa-tests.ts"
+    "test:qa": "tsx src/scripts/run-qa-tests.ts",
+    "demo:seed": "tsx src/scripts/demoSeed.ts"
   },
   "license": "UNLICENSED",
   "description": "AuditA - Backend de gestión de auditorías ISO/IEC 27002:2022 e ISO 19011:2018",

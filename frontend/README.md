@@ -17,6 +17,8 @@ cp .env.example .env     # solo si la API no está en http://localhost:3000/api
 npm run dev              # http://localhost:5173
 ```
 
+Para no partir de una base vacía, con la API en marcha ejecuta `npm run demo:seed` en `backend/`. Crea seis auditorías de ejemplo: una en Borrador, una en ejecución, dos en revisión (una con anomalías de trazabilidad y otra lista para cerrar) y dos cerradas con su informe.
+
 El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGIN`). Los usuarios de desarrollo y sus contraseñas están en `backend/.env`; no se escriben en este proyecto.
 
 | Script | Qué hace |

@@ -18,6 +18,12 @@ npm run db:up            # PostgreSQL en Docker (crea el esquema y los 14 contro
 npm run dev              # API en http://localhost:3000/api
 ```
 
+Para tener datos con los que recorrer el frontend, en otra terminal y con la API en marcha:
+
+```bash
+npm run demo:seed        # seis auditorías de ejemplo, una en cada momento del flujo
+```
+
 En otra terminal, la suite QA (CP-01 a CP-13) contra la API en ejecución:
 
 ```bash
@@ -43,6 +49,7 @@ El seeder no se ejecuta con `NODE_ENV=production`. Para crear más administrador
 | `npm run build` / `npm start` | Compila a `dist/` y lo ejecuta |
 | `npm run typecheck` | Verificación de tipos |
 | `npm run test:qa` | Suite QA CP-01…CP-13 contra `QA_API_URL` (API levantada) |
+| `npm run demo:seed` | Crea auditorías de ejemplo a través de la API (API levantada; no en producción; se puede repetir sin duplicar) |
 | `npm run db:up` / `db:down` | Levanta / detiene PostgreSQL |
 | `npm run db:reset` | **Borra todos los datos** y vuelve a ejecutar `sql/init_auditsys.sql` |
 | `npm run admin:create` | Crea un administrador |
