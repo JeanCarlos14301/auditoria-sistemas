@@ -1,0 +1,87 @@
+/* Base y piezas comunes. En movimiento continuo solo cambian transform y opacity. */
+html { scroll-padding-top: calc(var(--barra) + 12px); }
+body { background: var(--bg); color: var(--ink); font: 400 var(--t-ui)/1.5 var(--f-text); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-weight: 600; text-wrap: balance; }
+/* Titulares: tracking positivo por debajo de 28 px */
+h3 { font-size: var(--t-h3); letter-spacing: .006em; line-height: 1.3; }
+h4 { font-size: var(--t-ui); letter-spacing: .012em; line-height: 1.3; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: var(--wrap); margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+/* `hidden` manda siempre, aunque el elemento tenga su propio display */
+[hidden] { display: none !important; }
+/* Bloques de una pantalla, uno debajo de otro */
+.pila { display: grid; gap: 28px; min-width: 0; }
+.hoja { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; min-width: 0; }
+.titulo-seccion { font-size: 1.5rem; letter-spacing: .004em; line-height: 1.2; }
+.num, .cod { font-variant-numeric: tabular-nums; }
+.hash { font-family: var(--f-mono); font-size: .9em; word-break: break-all; }
+.sub { color: var(--muted); }
+.nota { color: var(--muted); max-width: 70ch; }
+.prosa { display: grid; gap: 14px; max-width: 64ch; }
+.prosa p { font-size: var(--t-body); line-height: var(--lh-body); }
+.prosa b { font-weight: 600; }
+.titulo-pagina { font-size: clamp(1.6rem, 4vw, var(--t-h1)); letter-spacing: -.008em; line-height: 1.12; }
+
+@keyframes entra { from { opacity: 0; transform: translateY(6px); } }
+.entra { animation: entra var(--d-enter) var(--e-in); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: 0s !important; transition-delay: 0s !important; }
+}
+
+.barra-usuario { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.barra-usuario .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logo { font-family: var(--f-acc); font-weight: 500; font-size: 1.3rem; line-height: 1; color: var(--ink); }
+
+.btn { display: inline-block; border-radius: var(--r); background: var(--accent); color: var(--on-accent); padding: 9px 16px; font-weight: 600; font-size: var(--t-ui); line-height: 1.5; cursor: pointer; white-space: nowrap; text-align: center; }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn.sec { background: none; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.btn.min { padding: 5px 10px; }
+.enlace { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.fila-acc { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+
+.campo { display: block; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: var(--r); padding: 9px 11px; width: 100%; min-width: 0; }
+textarea.campo { min-height: 72px; resize: vertical; line-height: 1.45; }
+.campo[aria-invalid="true"] { border-color: var(--alert); }
+.campo-w { min-width: 0; }
+.campo-w label, .campo-w .etq, .wk-form legend { display: block; font-weight: 600; margin-bottom: 6px; }
+.campo-w small { font-weight: 400; color: var(--muted); }
+.campo-error { color: var(--alert); margin-top: 4px; }
+.cita { border-left: 2px solid var(--line); padding-left: 10px; color: var(--muted); }
+.error { color: var(--alert); border-left: 2px solid var(--alert); padding: 2px 0 2px 10px; }
+.aviso { color: var(--muted); }
+.falta { color: var(--alert); }
+.dos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .dos { grid-template-columns: 1fr; } }
+
+/* Formulario que se abre dentro de la página (evidencia, hallazgo, recomendación) */
+.subform { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--raise); color: var(--ink); width: 100%; }
+.subform .campo { background: var(--surface); }
+
+.reg li { padding: 10px 0; border-top: 1px solid var(--line); display: grid; gap: 3px; }
+.reg .meta { color: var(--muted); }
+
+/* Marca de estado de un control: llena, media, hueca o raya */
+.marca { position: relative; display: inline-block; width: 14px; height: 6px; flex: none; --mc: var(--na); box-shadow: inset 0 0 0 1.5px var(--mc); }
+.marca[data-v="IMPLEMENTADO"] { --mc: var(--ok); background: var(--mc); }
+.marca[data-v="PARCIALMENTE_IMPLEMENTADO"] { --mc: var(--warn); }
+.marca[data-v="PARCIALMENTE_IMPLEMENTADO"]::after { content: ""; position: absolute; inset: 0 50% 0 0; background: var(--mc); }
+.marca[data-v="NO_IMPLEMENTADO"] { --mc: var(--bad); }
+.marca[data-v="NO_APLICABLE"] { box-shadow: none; }
+.marca[data-v="NO_APLICABLE"]::after { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; background: var(--mc); }
+
+/* Los cuatro estados de la auditoría; el indicador se desplaza con --idx */
+.estados { position: relative; min-width: 0; --idx: 0; }
+.estados ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-size: 12.5px; color: var(--muted); }
+.estados li { padding: 6px 2px 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estados li[aria-current] { color: var(--ink); font-weight: 600; }
+.estados::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); }
+.estados-marca { position: absolute; left: 0; bottom: 0; width: 25%; height: 3px; background: var(--accent); transform: translateX(calc(var(--idx) * 100%)); transition: transform var(--d-move) var(--e-st); }
+@media (max-width: 420px) { .estados ol { font-size: 11.5px; } .estados li { padding-inline: 0; text-overflow: clip; } }
+
+/* Grupo de pestañas con un indicador que se desliza con resorte (efectos.moverIndicador) */
+.chips { position: relative; display: flex; gap: 2px; padding: 3px; background: var(--raise); border-radius: var(--r); overflow-x: auto; max-width: 100%; scrollbar-width: none; justify-self: start; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { position: relative; z-index: 1; padding: 6px 11px; cursor: pointer; color: var(--muted); white-space: nowrap; }
+.chip[aria-pressed="true"] { color: var(--ink); font-weight: 600; }
+.chip-ind { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 0; width: 0; background: var(--surface); border-radius: 2px; box-shadow: inset 0 -2px 0 var(--ink); }
+.subform { transform-origin: 50% 0; }

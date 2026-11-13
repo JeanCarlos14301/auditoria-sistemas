@@ -1,0 +1,2 @@
+/* Va al final para que las utilidades de Tailwind ganen a los estilos de componente. */
+@tailwind utilities;

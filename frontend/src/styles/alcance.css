@@ -1,0 +1,63 @@
+/* Nueva auditoría y alcance: la hoja en Borrador */
+.nv-form { display: grid; gap: 14px; margin-top: 8px; }
+/* El nombre de la organización se escribe donde luego irá el título de la hoja */
+.titulo-input { display: block; font-family: var(--f-acc); font-weight: 500; font-size: clamp(1.6rem, 4vw, 2.2rem); letter-spacing: -.01em; line-height: 1.15; border-bottom: 1px dashed var(--muted); background: none; color: var(--ink); padding: 2px 0 6px; width: 100%; }
+.titulo-input::placeholder { color: var(--na); }
+.titulo-input[aria-invalid="true"] { border-bottom-color: var(--alert); }
+/* Antes de crearla, la auditoría todavía no está en ningún estado */
+.estados-sin .estados-marca { opacity: 0; }
+.estados-sin li[aria-current] { color: var(--muted); font-weight: 400; }
+
+.filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.filtros button { padding: 6px 10px; cursor: pointer; color: var(--muted); border-radius: var(--r); }
+.filtros button[aria-pressed="true"] { color: var(--ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--ink); }
+.filtros button:disabled { opacity: .4; cursor: not-allowed; }
+.filtros .sep { flex: 1; }
+/* --f: cuánto está fijado el control (0 borrador, 1 fijado), igual que las filas del acta */
+.ctl { position: relative; background: var(--surface); --i: 0; --f: clamp(0, calc(var(--pa) * var(--n) - var(--i)), 1); }
+.ctl::before, .ctl::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.ctl::before { border-bottom: 1px dashed var(--muted); opacity: calc((1 - var(--f)) * .6); }
+.ctl::after { border-bottom: 1px solid var(--line); opacity: var(--f); }
+.ctl label { display: grid; grid-template-columns: 22px 3.1em minmax(0, 1.6fr) minmax(0, 1fr); gap: 0 12px; align-items: center; padding: var(--row) 0; min-height: 44px; cursor: pointer; }
+.ctl input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.ctl .cod { font-weight: 600; }
+.ctl .nom, .ctl .cod { color: var(--muted); }
+.ctl input:checked ~ .nom, .ctl input:checked ~ .cod { color: var(--ink); }
+.ctl .tema { color: var(--muted); }
+.fijado .ctl label { grid-template-columns: 3.1em minmax(0, 1.6fr) minmax(0, 1fr); cursor: default; }
+.fijado .ctl input { display: none; }
+
+/* El contador de 10 a 15: quince casillas, siempre a la vista */
+.medidor { position: sticky; bottom: 0; z-index: 2; background: var(--surface); border-top: 1.5px solid var(--ink); padding: 16px 0 max(14px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px 32px; align-items: center; }
+.slots-w { position: relative; padding-top: 12px; }
+.slots { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 3px; }
+.slot { position: relative; height: 22px; background: var(--raise); display: grid; place-items: center; overflow: hidden; }
+.slot b, .slot em { position: absolute; inset: 0; }
+.slot b { background: var(--ink); transform: scaleY(0); transform-origin: 50% 100%; transition: transform var(--d-state) var(--e-st); }
+.slot.on b { transform: scaleY(1); }
+/* Al entrar en el tramo válido, las casillas llenas pasan al acento en onda desde la décima (--w es la distancia a ella) */
+.slot em { background: var(--accent); opacity: 0; transition: opacity 220ms linear; }
+.slots.ok .slot.on em { opacity: 1; transition-delay: calc(var(--w) * 40ms); }
+.slot span { position: relative; z-index: 1; font-size: 9.5px; font-weight: 600; color: var(--surface); opacity: 0; font-variant-numeric: tabular-nums; }
+.slot.on span { opacity: 1; }
+/* La llave marca el tramo válido, de la casilla 10 a la 15 */
+.llave { position: absolute; top: 0; left: calc(9 / 15 * 100% + 1px); right: 0; height: 9px; }
+.llave svg { width: 100%; height: 100%; overflow: visible; }
+.llave path { fill: none; stroke: var(--muted); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.llave .viva { stroke: var(--accent); stroke-width: 2.5; opacity: 0; }
+.slots-w.ok .llave .viva { opacity: 1; }
+.escala { position: relative; height: 18px; font-size: 11.5px; color: var(--muted); }
+.escala span { position: absolute; top: 3px; transform: translateX(-50%); }
+.medidor-txt { display: grid; gap: 8px; justify-items: start; }
+.cuenta-n { display: inline-block; font-family: var(--f-acc); font-weight: 500; font-size: 2rem; line-height: 1; vertical-align: -.12em; margin-right: 6px; }
+/* La ficha que viaja del control a su casilla */
+.ficha { position: fixed; left: 0; top: 0; z-index: 70; background: var(--ink); color: var(--surface); padding: 1px 6px; font-size: 11.5px; font-weight: 600; border-radius: 2px; pointer-events: none; font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .ctl label { grid-template-columns: 22px 2.9em minmax(0, 1fr); row-gap: 2px; }
+  .ctl .tema { grid-column: 3; }
+  .fijado .ctl label { grid-template-columns: 2.9em minmax(0, 1fr); }
+  .fijado .ctl .tema { grid-column: 2; }
+  .medidor { grid-template-columns: 1fr; }
+  .slot { height: 16px; }
+  .slot span { display: none; }
+}

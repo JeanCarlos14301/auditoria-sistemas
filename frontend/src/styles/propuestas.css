@@ -1,0 +1,54 @@
+/* Rebobinar la auditoría, postura por atributo, mantener para sellar y el sello en relieve */
+
+/* ── Rebobinar: en escritorio la sección se fija y el scroll es el tiempo ── */
+.rb-stage { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 20px 44px; align-items: center; }
+.rb.is-pinned .rb-stage { height: calc(100svh - var(--barra)); padding-block: 20px; }
+.rb-izq { display: grid; gap: 12px; min-width: 0; }
+.rb-num { font-family: var(--f-acc); font-weight: 500; font-size: clamp(3rem, 7vw, 4.4rem); line-height: 1; }
+.rb-num small { font-family: var(--f-text); font-size: 1rem; color: var(--muted); font-weight: 400; }
+.rb-tit { font-size: 1.25rem; font-weight: 600; line-height: 1.25; min-height: 2.5em; }
+.rb-meta { min-height: 1.5em; word-break: break-all; }
+.rb-ctrl { display: grid; gap: 8px; }
+.rb-rango { width: 100%; accent-color: var(--accent); margin: 0; }
+.rb-sello { width: 150px; justify-self: start; }
+.rb-filas { min-width: 0; }
+.rb-fila { position: relative; display: grid; grid-template-columns: 2.9em 16px minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; align-items: center; height: 32px; border-bottom: 1px solid var(--line); transition: opacity 260ms linear; }
+.rb-fila .cod { font-weight: 600; }
+.rb-fila .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.rb-fila.sin { opacity: .16; }
+.rb-fila::before { content: ""; position: absolute; left: -12px; top: 5px; bottom: 5px; width: 3px; background: var(--accent); opacity: 0; transition: opacity 160ms linear; }
+.rb-fila.toca::before { opacity: 1; }
+.rb-fila.toca .nom { color: var(--ink); }
+/* La traza en pequeño, sin escalonado: aquí el ritmo lo marca el scroll */
+.traza.mini { grid-template-columns: repeat(3, minmax(0, 1fr)) 14px; height: 20px; }
+.traza.mini .hilo { transition: transform 220ms var(--e-st); }
+.traza.mini .nodo { width: 8px; height: 8px; transition: transform 220ms var(--e-in); }
+.traza.mini .tramo[data-n="falta"] .nodo { width: 12px; height: 12px; }
+.traza.mini .toma { width: 7px; height: 7px; }
+.rb-fila.completa .toma::after { opacity: 1; background: var(--accent); transition-delay: 0s; }
+.marca[data-v=""] { box-shadow: inset 0 0 0 1px var(--line); }
+@media (max-width: 860px) {
+  .rb-stage { grid-template-columns: 1fr; }
+  .rb-sello { justify-self: center; }
+  .rb-fila { grid-template-columns: 2.9em 16px minmax(0, 1fr); }
+  .rb-fila .nom { display: none; }
+}
+
+/* ── Postura por atributo ── */
+.postura { gap: 18px; }
+.grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 22px 28px; align-items: start; min-height: 150px; }
+.grupo { display: grid; gap: 6px; align-content: start; border-top: 1.5px solid var(--ink); padding-top: 10px; min-width: 0; }
+.grupo h3 { font-size: var(--t-ui); letter-spacing: .012em; }
+.tiles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tile { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); font-weight: 600; }
+@media (max-width: 480px) { .grupos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ── Mantener para sellar: el botón se llena con --h ── */
+.hold { position: relative; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; padding: 13px 20px; --h: 0; }
+.hold::before { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: .35; transform: scaleX(var(--h)); transform-origin: 0 50%; }
+.hold span { position: relative; }
+
+/* ── El sello en relieve: three.js sobre el sello plano, que hace de respaldo ── */
+.relieve { position: relative; aspect-ratio: 1; width: min(100%, 300px); justify-self: center; display: grid; place-items: center; touch-action: pan-y; }
+.relieve canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.relieve-plano { display: grid; place-items: center; width: 100%; }

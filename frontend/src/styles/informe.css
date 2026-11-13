@@ -1,0 +1,183 @@
+/* La vista de impresión es una mesa: las hojas, sobre fondo gris */
+body:has(.inf), body:has(.inf) .barra, body:has(.inf)::before { background: var(--bg); }
+
+/* Vista de impresión del informe (pages/Informe.tsx). La pantalla enseña las hojas A4 tal como salen de la impresora.
+   Clases .inf-*: la interfaz alrededor de las hojas. Clases .a4-*: lo que va impreso.
+   El JS escribe --s (escala de las hojas), --p (avance del scroll) y clases; nunca colores. */
+.inf { --p: 0; display: grid; gap: 0; min-width: 0; }
+.inf-cab { display: grid; gap: 4px; padding-bottom: 6px; }
+.inf-tit { font-size: 1.5rem; font-weight: 600; letter-spacing: .004em; line-height: 1.2; text-wrap: balance; }
+.inf-estado { display: flex; align-items: baseline; gap: 8px; min-height: 1.45em; }
+.inf-estado i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translateY(-1px); }
+.inf.verificando .inf-estado i { background: var(--muted); animation: inf-late 700ms var(--e-st) infinite alternate; }
+.inf.rota .inf-estado { color: var(--alert); }
+.inf.rota .inf-estado i { background: var(--alert); border-radius: 0; }
+@keyframes inf-late { from { opacity: .25; } to { opacity: 1; } }
+
+/* La franja que acompaña al scroll: qué se imprime, por qué página se va y el botón */
+.inf-barra { position: sticky; top: var(--barra); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.inf-barra-in { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 20px; align-items: center; padding-block: 10px; }
+.inf-op { display: flex; flex-wrap: wrap; gap: 2px 18px; }
+.inf-casilla { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; min-height: 32px; }
+.inf-casilla input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
+.inf-acc { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 16px; }
+.inf-folio { color: var(--muted); white-space: nowrap; }
+.inf-folio b { display: inline-block; color: var(--ink); font-weight: 600; min-width: 1ch; text-align: center; }
+.inf.rota .inf-barra .btn { background: none; color: var(--alert); box-shadow: inset 0 0 0 1.5px var(--alert); }
+/* Avance por las hojas: en móvil sustituye al carril */
+.inf-avance { height: 2px; background: var(--line); }
+.inf-avance i { display: block; height: 100%; background: var(--accent); transform: scaleX(var(--p)); transform-origin: 0 50%; }
+
+.inf-cuerpo { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 36px; align-items: start; padding-top: 28px; }
+/* El carril: una miniatura por hoja, unidas por un hilo que avanza con el scroll. Cada nudo se llena cuando la hoja lleva su huella. */
+.inf-rail { position: sticky; top: calc(var(--barra) + 80px); display: grid; gap: 14px; padding-left: 18px; max-height: calc(100vh - var(--barra) - 100px); overflow-y: auto; scrollbar-width: none; }
+.inf-rail::-webkit-scrollbar { display: none; }
+.inf-hilo { position: absolute; left: 4px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+.inf-hilo i { display: block; width: 100%; height: 100%; background: var(--ink); transform: scaleY(var(--p)); transform-origin: 50% 0; }
+.inf-mini { position: relative; display: grid; gap: 4px; justify-items: start; text-align: left; color: var(--muted); font-size: 11.5px; cursor: pointer; }
+.inf-mini::before { content: ""; position: absolute; left: -17.5px; top: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 1.5px var(--muted); transform: scale(.6); transition: transform var(--d-move) var(--e-in), background-color var(--d-state) linear, box-shadow var(--d-state) linear; }
+.inf-mini[data-ok]::before { background: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); transform: scale(1); }
+.inf.rota .inf-mini[data-ok]::before { background: var(--bg); box-shadow: inset 0 0 0 1.5px var(--alert); border-radius: 0; }
+.inf-mini-hoja { position: relative; display: block; width: 60px; height: 85px; background: var(--p-papel); box-shadow: 0 0 0 1px var(--line); overflow: hidden; transition: box-shadow var(--d-state) linear; }
+.inf-mini-hoja .a4 { transform: scale(calc(60 / 794)); pointer-events: none; }
+.inf-mini.actual { color: var(--ink); font-weight: 600; }
+.inf-mini.actual .inf-mini-hoja { box-shadow: 0 0 0 2px var(--ink); }
+.inf-fuera { display: none; }
+
+.inf-pliego { --s: 1; display: grid; gap: 28px; justify-items: center; min-width: 0; }
+.inf-marco { position: relative; width: 100%; max-width: 794px; aspect-ratio: 794 / 1123; box-shadow: var(--p-sombra); background: var(--p-papel); }
+.inf-visor { position: absolute; inset: 0; overflow: hidden; }
+.inf-marco.zoom .inf-visor { overflow: auto; }
+.inf-marco.zoom .a4 { transform: scale(var(--z, 1)); }
+/* En pantallas estrechas la hoja entera cabe, pero no se lee: cada una se puede ampliar en su sitio */
+.inf-lupa { display: none; position: absolute; right: 8px; top: 8px; z-index: 3; background: var(--p-tinta); color: var(--p-papel); border-radius: var(--r); padding: 6px 10px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.inf.chico .inf-lupa { display: block; }
+.inf-medidor { position: absolute; left: -200vw; top: 0; width: 794px; visibility: hidden; pointer-events: none; }
+.inf-medidor > div { position: relative; width: 794px; height: 1123px; --s: 1; }
+
+/* ── La hoja A4: 794 × 1123 px a 96 ppp. Dentro todo va en px: la hoja entera se escala como una pieza. ── */
+.a4 {
+  --surface: var(--p-papel); --raise: var(--p-relieve); --line: var(--p-linea); --ink: var(--p-tinta); --muted: var(--p-gris);
+  --accent: var(--p-acento); --alert: var(--p-alerta); --ok: var(--p-acento); --warn: var(--p-aviso); --bad: var(--p-alerta); --na: var(--p-na); --tint: var(--p-tinte);
+  position: absolute; left: 0; top: 0; width: 794px; height: 1123px; transform: scale(var(--s)); transform-origin: 0 0;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; padding: 44px 64px 40px; background: var(--surface); color: var(--ink);
+  font: 400 13px/1.5 var(--f-text); overflow: hidden;
+}
+.a4-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-bottom: 9px; border-bottom: 1.5px solid var(--ink); font-size: 10.5px; color: var(--muted); }
+.a4-m { font: 500 15px var(--f-acc); color: var(--ink); }
+.a4-c { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.a4-portada .a4-c { visibility: hidden; }
+.a4-cuerpo { min-height: 0; overflow: hidden; display: flex; flex-direction: column; padding-top: 22px; }
+.a4-cuerpo > * { flex: none; }
+/* El bloque que abre hoja no lleva margen: el paginador (lib/paginar.ts) cuenta con ello */
+.a4-cuerpo > :first-child { margin-top: 0; }
+.a4-pie { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 9px; border-top: 1px solid var(--line); font-size: 10px; color: var(--muted); }
+/* La huella: cada hoja lleva la del informe, para que una hoja suelta se pueda cotejar */
+.a4-huella { display: inline-flex; align-items: center; gap: 7px; transform-origin: 6px 50%; }
+.a4-huella i { flex: none; width: 9px; height: 9px; background: var(--accent); transform: rotate(45deg); }
+.inf.verificando .a4-huella { opacity: 0; }
+.inf.rota .a4-huella { color: var(--alert); font-weight: 600; }
+.inf.rota .a4-huella i { background: none; box-shadow: inset 0 0 0 1.5px var(--alert); }
+.a4-folio b { color: var(--ink); font-weight: 600; display: inline-block; }
+/* Con la verificación fallida, la hoja se imprime marcada */
+.a4-agua { display: none; position: absolute; left: 50%; top: 50%; translate: -50% -50%; rotate: -24deg; font: 600 84px/1 var(--f-text); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; color: var(--alert); opacity: .13; pointer-events: none; }
+.inf.rota .a4-agua { display: block; }
+
+/* Tipografía de la hoja */
+.a4 h2 { font-size: 19px; font-weight: 600; letter-spacing: .008em; line-height: 1.25; }
+.a4 h3 { font-size: 13px; font-weight: 600; letter-spacing: .012em; }
+.a4-intro { margin-top: 6px; max-width: 78ch; }
+.a4-intro b, .a4-lead { font-weight: 600; }
+.a4-rot { font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.a4-b { margin-top: 26px; }
+
+/* Portada */
+.a4-cuerpo > .a4-cub { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.a4-tit { font: 500 46px/1.06 var(--f-acc); letter-spacing: -.018em; margin-top: 10px; text-wrap: balance; }
+.a4-alc { font-size: 15px; line-height: 1.45; margin-top: 12px; max-width: 56ch; }
+.a4-datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 24px; margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); }
+.a4-datos dt { font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.a4-datos dd { margin-top: 2px; }
+.a4-res { display: grid; grid-template-columns: minmax(0, 1fr) 232px; gap: 36px; align-items: center; margin-top: 28px; padding-top: 22px; border-top: 1.5px solid var(--ink); }
+.a4-cifra { display: block; font: 500 84px/1 var(--f-acc); letter-spacing: -.02em; margin-top: 2px; }
+.a4-unidades { display: flex; gap: 5px; margin-top: 14px; }
+.a4-unidades .marca { width: 22px; height: 8px; }
+.a4-dist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin-top: 16px; }
+.a4-dist li { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+.a4-dist li b { margin-left: auto; font-weight: 600; }
+/* El sello, en tinta */
+.a4-sello { width: 232px; aspect-ratio: 1; --sv-apagado: 0; }
+.a4-int { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px 36px; }
+.a4-hash { font: 11px/1.5 var(--f-mono); word-break: break-all; margin-top: 4px; }
+.a4-veredicto { margin-top: 8px; font-weight: 600; }
+.inf.rota .a4-veredicto { color: var(--alert); }
+.a4-veredicto, .a4-checks { transition: opacity 320ms linear; }
+.inf.verificando .a4-veredicto, .inf.verificando .a4-checks { opacity: 0; }
+.a4-checks li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.a4-checks b { font-weight: 600; }
+.a4-checks .no { color: var(--alert); }
+.a4-firmas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; margin-top: auto; padding-top: 30px; }
+.a4-firmas i { display: block; border-bottom: 1px solid var(--ink); height: 46px; }
+.a4-firmas p { margin-top: 5px; }
+
+/* Tablas de la hoja: filas en rejilla, para poder partirlas entre hojas */
+.a4-fila { display: grid; gap: 0 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.a4-cabecera { padding: 0 0 5px; border-bottom: 1px solid var(--ink); font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-top: 14px; }
+.a4-f-res { grid-template-columns: 34px minmax(0, 1.5fr) 118px 30px 30px 30px 150px; }
+.a4-ctr { text-align: center; }
+.a4-tema { color: var(--muted); font-size: 10.5px; }
+.a4-cod { font-weight: 600; }
+.a4-est { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+/* La traza de cada control, ya completa: evidencia, hallazgo y recomendación */
+.a4-tz { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 9px; align-items: center; height: 12px; }
+.a4-tz span { position: relative; height: 1.5px; background: var(--ink); }
+.a4-tz span.n::after { content: ""; position: absolute; left: calc(50% - 3.5px); top: -2.75px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+.a4-tz span.v { background: var(--line); }
+.a4-tz b { width: 7px; height: 7px; background: var(--accent); justify-self: end; }
+.a4-f-ev { grid-template-columns: 34px minmax(0, 1fr) 96px 74px; align-items: start; }
+.a4-sha { grid-column: 2 / -1; font: 9.5px/1.4 var(--f-mono); color: var(--muted); word-break: break-all; margin-top: 2px; }
+.a4-f-obs { grid-template-columns: 34px minmax(0, 1fr); align-items: start; }
+.a4-f-bit { grid-template-columns: 20px 136px 130px minmax(0, 1fr); padding: 3px 0; font-size: 10.5px; line-height: 1.3; white-space: nowrap; }
+.a4-f-bit.a4-cabecera { padding-bottom: 5px; }
+.a4-h { font: 8.6px/1.3 var(--f-mono); white-space: nowrap; text-align: right; }
+.a4-tipo { font: 9.5px var(--f-mono); }
+.inf.rota .a4-f-bit.tras { color: var(--muted); }
+.inf.rota .a4-f-bit.ruptura { color: var(--alert); }
+/* Hallazgo: criterio, condición, causa y efecto (ISO 19011), y su recomendación */
+.a4-hz { margin-top: 13px; padding-top: 10px; border-top: 1.5px solid var(--ink); }
+.a4-cuerpo > .a4-hz:first-child { margin-top: 0; }
+.a4-hz-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.a4-sev { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-weight: 600; }
+.a4-sev i { display: inline-flex; gap: 2px; }
+.a4-sev s { width: 4px; height: 11px; box-shadow: inset 0 0 0 1px var(--ink); }
+.a4-sev s.on { background: var(--ink); }
+.a4-hz dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 3px 14px; margin-top: 6px; font-size: 12px; }
+.a4-hz dt { color: var(--muted); }
+.a4-rec { margin-top: 8px; padding: 7px 10px; margin-inline: -10px; background: var(--raise); display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 2px 14px; align-items: baseline; font-size: 12px; }
+.a4-rec .a4-rot { letter-spacing: .06em; }
+
+@media (max-width: 900px) {
+  .inf-cuerpo { grid-template-columns: minmax(0, 1fr); padding-top: 18px; }
+  .inf-rail { display: none; }
+  .inf-pliego { gap: 18px; }
+}
+@media (max-width: 760px) {
+  .inf-barra-in { grid-template-columns: minmax(0, 1fr); padding-block: 6px 8px; }
+  .inf-acc { justify-content: space-between; }
+  .inf-tit { font-size: 1.25rem; }
+  .inf-casilla { font-size: 13.5px; }
+}
+
+/* ── Impresión: fuera la interfaz; cada hoja, una página A4 sin los márgenes del navegador ── */
+@page informe { size: A4; margin: 0; }
+@media print {
+  :root:has(.inf) { --p-papel: #FFFFFF; --p-relieve: #F1F3F4; --p-linea: #D2D7DB; }
+  body:has(.inf) { background: #FFFFFF; }
+  body:has(.inf) .barra, .inf-cab, .inf-barra, .inf-rail, .inf-lupa, .inf-medidor { display: none !important; }
+  main.pagina:has(.inf) { max-width: none; padding: 0; margin: 0; }
+  .inf, .inf-cuerpo, .inf-pliego { display: block; padding: 0; }
+  .inf-marco { page: informe; width: 210mm; height: 297mm; max-width: none; aspect-ratio: auto; box-shadow: none; break-after: page; break-inside: avoid; overflow: hidden; }
+  .inf-marco.inf-fuera { display: none; }
+  .inf-visor { overflow: hidden !important; }
+  .a4 { transform: none !important; opacity: 1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

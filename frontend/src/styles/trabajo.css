@@ -1,0 +1,61 @@
+/* Pantalla de trabajo: lista de controles, detalle del control y métricas */
+.wk { background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+.wk-cab { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 28px; padding: 14px 22px; border-bottom: 1px solid var(--line); }
+.wk-org { font-size: 1.25rem; letter-spacing: .004em; line-height: 1.3; }
+.wk-meta { color: var(--muted); margin-top: 3px; }
+.wk-acc { display: grid; gap: 6px; justify-items: end; }
+.wk-cuerpo { display: grid; grid-template-columns: 236px minmax(0, 1fr) 252px; align-items: start; }
+.wk-lista { border-right: 1px solid var(--line); padding: 10px; display: grid; gap: 1px; align-self: stretch; align-content: start; }
+.wk-item { display: grid; grid-template-columns: 16px 2.7em minmax(0, 1fr); gap: 8px; align-items: center; width: 100%; text-align: left; padding: var(--row) 8px; border-radius: var(--r); cursor: pointer; }
+.wk-item .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.wk-item[aria-current="true"] { background: var(--raise); }
+.wk-item[aria-current="true"] .nom { color: var(--ink); }
+.wk-item.pend .nom::after { content: " · pendiente"; color: var(--alert); }
+.wk-select { display: none; margin: 14px 16px 0; width: calc(100% - 32px); }
+.wk-det { padding: 22px 26px; display: grid; gap: 18px; min-width: 0; }
+/* El detalle entra por partes al cambiar de control */
+.wk-det.entra { animation: none; }
+.wk-det.entra > * { animation: entra var(--d-enter) var(--e-in) both; }
+.wk-det.entra > :nth-child(2) { animation-delay: 30ms; }
+.wk-det.entra > :nth-child(3) { animation-delay: 60ms; }
+.wk-det.entra > :nth-child(n+4) { animation-delay: 90ms; }
+.wk-det header .cod { color: var(--accent); font-weight: 600; }
+.wk-det header h2 { font-size: 1.3rem; letter-spacing: .004em; line-height: 1.3; margin-top: 2px; }
+.criterio { font-size: var(--t-body); line-height: var(--lh-body); max-width: 62ch; }
+.wk-form { display: grid; gap: 12px; }
+.wk-sec { display: grid; gap: 8px; }
+.wk-sec-cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+
+/* Selector de estado: el indicador se mueve con --i (o --c / --f cuando pasa a dos filas) */
+.seg { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: var(--r); padding: 2px; --i: 0; --c: 0; --f: 0; }
+.seg-ind { position: absolute; left: 2px; top: 2px; bottom: 2px; width: calc((100% - 4px) / 4); background: var(--raise); border-radius: 1px; transform: translateX(calc(var(--i) * 100%)); transition: transform var(--d-move) var(--e-st); }
+.seg label { position: relative; display: grid; cursor: pointer; margin: 0; font-weight: 400; }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg span { padding: 8px 2px; text-align: center; color: var(--muted); font-size: .84375rem; white-space: nowrap; }
+.seg input:checked + span { color: var(--ink); font-weight: 600; }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.wk-met { border-left: 1px solid var(--line); padding: 22px; display: grid; gap: 16px; align-self: stretch; align-content: start; }
+.cifra { font-family: var(--f-acc); font-weight: 500; font-size: 3.25rem; line-height: 1.05; letter-spacing: -.02em; }
+.unidades { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+/* Trece marcas tienen que caber en una fila del panel */
+.unidades .marca { width: 11px; }
+.cuentas { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 12px; }
+.cuentas dt { color: var(--muted); }
+.cuentas dd { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+@media (max-width: 1020px) {
+  .wk-cab { grid-template-columns: 1fr; align-items: start; }
+  .wk-acc { justify-items: start; }
+  .wk-cuerpo { grid-template-columns: 220px minmax(0, 1fr); }
+  .wk-met { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (max-width: 760px) {
+  .wk-cab { padding: 16px; }
+  .wk-cuerpo { grid-template-columns: 1fr; }
+  .wk-lista { display: none; }
+  .wk-select { display: block; }
+  .wk-det, .wk-met { padding: 18px 16px; }
+  .seg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .seg-ind { width: calc((100% - 4px) / 2); bottom: auto; height: calc((100% - 4px) / 2); transform: translate(calc(var(--c) * 100%), calc(var(--f) * 100%)); }
+}

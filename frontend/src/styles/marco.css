@@ -1,0 +1,72 @@
+/* Marco común de documento (components/Barra.tsx) y cabecera de auditoría (components/CabeceraAuditoria.tsx).
+   La página es papel a todo el ancho, como la portada de la entrada: barra de documento arriba, pie abajo. */
+body { background: var(--surface); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--surface); }
+.marco { max-width: 1600px; margin-inline: auto; padding-left: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(20px, 4.5vw, 72px), env(safe-area-inset-right, 0px)); }
+.rot { font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.regla { display: block; height: 1.5px; background: var(--ink); transform-origin: 0 50%; }
+.regla.fina { height: 1px; background: var(--line); }
+
+/* La barra de documento: dónde estás, siempre a la vista */
+.barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--surface); border-bottom: 0; }
+.barra-in { display: flex; align-items: center; gap: 10px 22px; min-height: var(--barra); }
+.barra .logo { flex: none; text-decoration: none; }
+.miga { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1; font-size: 14px; color: var(--muted); }
+.miga a { color: var(--muted); text-decoration: none; }
+.miga a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.miga a[aria-current="page"] { color: var(--ink); }
+.miga .sep { color: var(--line); }
+.miga-aud { min-width: 0; overflow: hidden; white-space: nowrap; }
+.miga-vista { color: var(--ink); white-space: nowrap; }
+/* El nombre de la auditoría entra en la barra cuando su título grande sale de la pantalla */
+.miga-org { color: var(--ink); font-weight: 600; display: inline-block; vertical-align: bottom; max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0; transition: max-width 450ms var(--e-in), opacity 240ms linear; }
+.barra.con-nombre .miga-org { max-width: min(44vw, 560px); opacity: 1; }
+.barra-usuario { flex: none; }
+
+.pagina { padding-block: 0 64px; min-height: calc(100svh - var(--barra) - 60px); }
+/* Las pantallas que no son de una auditoría siguen empezando con aire */
+.pagina > :not(.aud) { margin-top: clamp(22px, 4vh, 40px); }
+.pie-doc { padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); }
+.pie-doc-t { display: flex; justify-content: space-between; gap: 16px; padding-top: 10px; font-size: 12px; color: var(--muted); }
+
+/* Cabecera de auditoría: una sola, igual en todas sus pantallas */
+.cab { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 48px; align-items: end; padding-top: clamp(22px, 4vh, 40px); }
+.cab > * { min-width: 0; }
+.cab-a { display: grid; gap: 8px; }
+.cab-org { font: 500 clamp(1.9rem, 3vw, 2.7rem)/1.08 var(--f-acc); letter-spacing: -.012em; }
+.cab-datos { display: flex; flex-wrap: wrap; gap: 4px 22px; color: var(--muted); font-size: 15px; }
+.cab-datos .alc { color: var(--ink); max-width: 60ch; }
+/* Las cuatro fases, con la fecha en que la bitácora registró cada una */
+.fases { display: grid; grid-template-columns: repeat(4, minmax(92px, 1fr)); padding-bottom: 4px; }
+.fase { position: relative; display: grid; gap: 3px; padding-top: 18px; font-size: 13px; color: var(--muted); }
+.fase::before { content: ""; position: absolute; left: 0; right: 0; top: 5px; height: 1.5px; background: var(--line); transition: background-color var(--d-state) linear; }
+.fase.hecha::before, .fase.actual::before { background: var(--ink); }
+.fase i { position: absolute; left: 0; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--line); transition: background-color var(--d-state) linear, box-shadow var(--d-state) linear; }
+.fase.hecha i { background: var(--ink); box-shadow: none; }
+.fase.actual i { background: var(--accent); box-shadow: 0 0 0 4px var(--tint); }
+.fase b { font-weight: 600; }
+.fase.actual b { color: var(--ink); }
+.fase .fecha { font-size: 12px; }
+/* Las pestañas: solo las vistas que tiene la auditoría en su estado */
+.pestanas-w { grid-column: 1 / -1; border-bottom: 1px solid var(--line); margin-top: 6px; min-width: 0; }
+.pestanas { position: relative; display: flex; overflow-x: auto; scrollbar-width: none; }
+.pestanas::-webkit-scrollbar { display: none; }
+.pest { position: relative; display: grid; gap: 1px; padding: 10px 0 12px; margin-right: 36px; color: var(--muted); white-space: nowrap; text-decoration: none; }
+.pest b { font-size: 16px; font-weight: 600; }
+.pest small { font-size: 12.5px; }
+.pest[aria-current="page"] { color: var(--ink); }
+.pest:hover { color: var(--ink); }
+.pest-ind { position: absolute; left: 0; bottom: 0; height: 2.5px; width: 0; background: var(--accent); }
+.aud-vista { padding-top: 28px; }
+
+@media (max-width: 860px) {
+  .cab { grid-template-columns: minmax(0, 1fr); }
+  .fases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .fase { font-size: 12px; }
+  .barra-usuario .sub, .miga .sep-vista, .miga .miga-vista { display: none; }
+  .pie-doc-t span:last-child { display: none; }
+}
+
+@media print {
+  .barra, .pie-doc { display: none !important; }
+}

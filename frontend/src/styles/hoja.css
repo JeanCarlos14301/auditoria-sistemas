@@ -1,0 +1,101 @@
+/*
+  Revisión y cierre: la hoja del acta.
+  El JS escribe --p (0 → 1) en .acta durante el cierre; de ahí salen tres tramos:
+    --pa  0 → 0,5      la línea recorre la hoja y fija cada fila
+    --pb  0,42 → 0,84  los trazos del sello se fijan uno a uno
+    --pc  0,84 → 1     aparecen la roseta, la cifra y el lema; el sello se asienta
+  Los mismos límites están en P_SELLO_INICIO y P_SELLO_TRAMO (pages/Cierre.tsx).
+*/
+.acta { --h: 0; --p: 0; --pa: clamp(0, calc(var(--p) / .5), 1); --pb: clamp(0, calc((var(--p) - .42) / .42), 1); --pc: clamp(0, calc((var(--p) - .84) / .16), 1); --n: 13; }
+.hoja-cab { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 360px); gap: 16px 32px; align-items: end; }
+/* Titular por encima de 40 px: tracking negativo */
+.hoja-titulo { font-family: var(--f-acc); font-weight: 500; font-size: clamp(1.9rem, 4.4vw, 2.7rem); letter-spacing: -.012em; line-height: 1.08; }
+.hoja-alcance { font-size: var(--t-body); line-height: var(--lh-body); margin-top: 6px; max-width: 60ch; }
+.hoja-datos { display: flex; flex-wrap: wrap; gap: 4px 28px; color: var(--muted); margin-top: 12px; }
+.hoja-cuerpo { position: relative; overflow: hidden; border-top: 1.5px solid var(--ink); }
+/* La línea que fija la hoja: un velo que baja desde arriba, solo con transform */
+.platina { position: absolute; inset: 0; background: var(--tint); border-bottom: 2px solid var(--accent); transform: translateY(calc((var(--pa) - 1) * 100%)); opacity: calc(1 - var(--pc)); pointer-events: none; }
+
+.hoja-cols, .fila { display: grid; grid-template-columns: 3.1em minmax(0, 1.5fr) minmax(0, .95fr) minmax(0, 1.45fr); gap: 0 14px; align-items: center; }
+.hoja-cols { font-size: 12.5px; color: var(--muted); padding: 8px 0; border-bottom: 1px solid var(--line); }
+.traza-cols, .traza { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 22px; }
+.traza-cols { text-align: center; }
+.hoja-filas { position: relative; }
+/* --f: cuánto está fijada la fila (0 borrador, 1 fijada). Cambia el borde discontinuo por uno continuo con opacidad. */
+.fila { position: relative; padding: var(--row) 0; min-height: 44px; --f: clamp(0, calc(var(--pa) * var(--n) - var(--i)), 1); }
+.fila::before, .fila::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; }
+.fila::before { border-bottom: 1px dashed var(--muted); opacity: calc((1 - var(--f)) * .6); }
+.fila::after { border-bottom: 1px solid var(--line); opacity: var(--f); }
+.fila .cod { font-weight: 600; }
+.fila .est { display: flex; gap: 8px; align-items: center; min-width: 0; }
+
+/* La traza: tres tramos y la toma que conecta con el margen */
+.traza { align-items: center; height: 22px; }
+.tramo { position: relative; height: 100%; display: grid; place-items: center; }
+.tramo::before { content: ""; position: absolute; left: 0; right: 0; top: calc(50% - .5px); border-top: 1px dashed var(--line); }
+.hilo { position: absolute; left: 0; right: 0; top: calc(50% - 1px); height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 300ms var(--e-st); }
+.tramo.on .hilo { transform: scaleX(1); transition-delay: calc(var(--k) * 150ms); }
+.nodo { position: relative; z-index: 1; width: 9px; height: 9px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px var(--surface); transform: scale(0); transition: transform 300ms var(--e-in); }
+.tramo[data-n="ok"] .nodo { transform: scale(1); transition-delay: calc(var(--k) * 150ms + 110ms); }
+/* El eslabón que falta */
+.tramo[data-n="falta"] .nodo { transform: scale(1); background: var(--surface); outline: 1.5px dashed var(--alert); outline-offset: -1px; width: 14px; height: 14px; }
+.toma { justify-self: end; width: 8px; height: 8px; background: var(--line); position: relative; z-index: 1; }
+.toma::after { content: ""; position: absolute; inset: 0; background: var(--ink); opacity: 0; transition: opacity 200ms linear; }
+.fila.completa .toma::after { opacity: 1; transition-delay: 600ms; }
+.acta.apta .fila.completa .toma::after { background: var(--accent); }
+/* Al abrir la hoja, las trazas se dibujan fila a fila (--i) y tramo a tramo (--k) */
+.hoja-filas:not(.dibujada) .tramo.on .hilo { transform: scaleX(0); }
+.hoja-filas:not(.dibujada) .tramo[data-n] .nodo { transform: scale(0); }
+.hoja-filas.entrando .tramo.on .hilo { transition-delay: calc(var(--k) * 150ms + var(--i) * 45ms); }
+.hoja-filas.entrando .tramo[data-n] .nodo { transition-delay: calc(var(--k) * 150ms + var(--i) * 45ms + 110ms); }
+/* El margen: se completa de arriba abajo cuando la auditoría es apta para cierre */
+.bus { position: absolute; top: 0; bottom: 0; right: 3px; width: 2px; background: var(--line); }
+.bus i { position: absolute; inset: 0; background: var(--accent); transform: scaleY(0); transform-origin: 50% 0; transition: transform 800ms var(--e-st); }
+.acta.apta .bus i { transform: scaleY(1); }
+.pulso { position: absolute; right: 0; top: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: 0; pointer-events: none; z-index: 2; }
+.msg { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 26px 2px 0; color: var(--alert); }
+
+.hoja-pie { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 24px 44px; align-items: center; }
+/* Sellada: el sello en relieve necesita más sitio */
+.hoja-pie.sellada { grid-template-columns: minmax(0, 1fr) 300px; }
+.pie-txt { min-width: 0; }
+.pie-txt > div { display: grid; gap: 10px; }
+.resumen { display: flex; flex-wrap: wrap; gap: 2px 18px; color: var(--muted); }
+.resumen b { color: var(--ink); font-weight: 600; }
+.checks { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; max-width: 30rem; }
+.checks dt { color: var(--muted); }
+.checks dd { font-weight: 600; }
+.checks dd.no { color: var(--alert); }
+
+/* El sello: un trazo por eslabón de la bitácora */
+.sello { width: 220px; max-width: 100%; aspect-ratio: 1; justify-self: center; transform: scale(calc(1.1 - .1 * var(--pc))) rotate(calc((1 - var(--pc)) * -5deg)); }
+.sello svg { width: 100%; height: 100%; overflow: visible; }
+/* Abierta: trazos a media tinta. Al cerrar se fijan en orden (--k es la posición del trazo en el anillo). */
+.sello .tick { stroke: var(--ink); stroke-width: 1.6; transform-box: view-box; transform-origin: 120px 120px; opacity: calc(.4 + .6 * clamp(0, calc((max(var(--pb), var(--h)) - var(--k)) * 40), 1)); transition: transform var(--d-move) var(--e-st), opacity 260ms linear; }
+.sello .tick.t-EVA { stroke: var(--muted); }
+.sello .tick.t-EVI { stroke: var(--ok); }
+.sello .tick.t-HAL { stroke: var(--bad); }
+.sello .tick.t-REC { stroke: var(--warn); }
+.sello .tick.t-CIE { stroke: var(--accent); stroke-width: 3; opacity: clamp(.13, calc((var(--pb) - var(--k)) * 40), 1); }
+.sello .tick.nuevo { opacity: 1; stroke-width: 3; }
+.sello .roseta path { fill: none; stroke: var(--accent); stroke-width: .6; opacity: calc(var(--pc) * .8); }
+.sello .disco { fill: var(--surface); opacity: var(--pc); }
+.sello .orla { font: 500 7.2px var(--f-mono); fill: var(--muted); opacity: var(--pc); }
+.sello .pct { font: 500 26px var(--f-acc); fill: var(--ink); text-anchor: middle; opacity: var(--pc); }
+.sello .lema { font: 600 7.4px var(--f-text); letter-spacing: .14em; fill: var(--accent); text-anchor: middle; opacity: var(--pc); }
+/* Cadena alterada: el sello no cierra */
+.sello.rota .tick.tras { opacity: .13; }
+.sello.rota .tick.ruptura { stroke: var(--alert); stroke-width: 3.4; opacity: 1; }
+.sello.rota .roseta path { opacity: .14; }
+.sello.rota .lema { fill: var(--alert); }
+
+@media (max-width: 860px) { .hoja-cab { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .hoja-cols { grid-template-columns: 1fr; }
+  .hoja-cols > span { display: none; }
+  .fila { grid-template-columns: 2.9em minmax(0, 1fr); gap: 3px 10px; align-items: baseline; }
+  .fila .est { grid-column: 2; color: var(--muted); }
+  .fila .traza { grid-column: 1 / -1; margin-top: 4px; }
+  .msg { padding-right: 0; }
+  .hoja-pie, .hoja-pie.sellada { grid-template-columns: 1fr; }
+}

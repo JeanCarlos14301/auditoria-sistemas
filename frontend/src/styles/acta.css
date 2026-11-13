@@ -1,0 +1,134 @@
+/* El acta de una auditoría cerrada (pages/Acta.tsx). Índice en el margen y el contenido; el resultado, primero.
+   El JS escribe --p (avance de lectura del índice) y clases; los colores salen de los tokens. */
+.ac { display: grid; grid-template-columns: 196px minmax(0, 1fr); gap: 0 clamp(32px, 4vw, 64px); }
+.ac-indice { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--barra) + 24px); align-self: start; display: grid; gap: 14px; padding-top: 8px; }
+.ac-indice ol { position: relative; display: grid; gap: 2px; padding-left: 14px; }
+.ac-indice ol::before { content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 1.5px; background: var(--line); }
+.ac-progreso { position: absolute; left: 0; top: 4px; bottom: 4px; width: 1.5px; background: var(--ink); transform: scaleY(var(--p, 0)); transform-origin: 50% 0; }
+.ac-ind { position: absolute; left: -1px; top: 0; width: 3.5px; height: 0; background: var(--accent); }
+.ac-indice a { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; color: var(--muted); text-decoration: none; font-size: 14px; }
+.ac-indice li.activa a { color: var(--ink); font-weight: 600; }
+.ac-indice a span { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+.ac-contenido { display: grid; min-width: 0; }
+.ac-sec { padding-block: 34px; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--barra) + 20px); min-width: 0; }
+.ac-sec:first-child { border-top: 0; padding-top: 8px; }
+.ac-sec-cab { display: grid; gap: 6px; margin-bottom: 22px; }
+.ac-sec-cab h2 { font-size: 1.5rem; letter-spacing: .004em; line-height: 1.2; }
+.ac-sec-cab p { color: var(--muted); max-width: 72ch; font-size: 15px; }
+
+/* El resultado */
+.ac-res { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 440px); gap: 24px clamp(28px, 4vw, 64px); align-items: center; }
+.ac-res > * { min-width: 0; }
+.ac-res-txt { display: grid; gap: 16px; }
+.ac-cifra { font: 500 clamp(4.6rem, 7.4vw, 7.4rem)/.9 var(--f-acc); letter-spacing: -.03em; }
+.ac-res-sub { font-size: 1.0625rem; }
+.ac-res-sub b { font-weight: 600; }
+.ac-unidades { display: flex; flex-wrap: wrap; gap: 5px; }
+.ac-unidades .marca { width: 26px; height: 9px; transform-origin: 0 50%; }
+.ac-veredicto { display: grid; gap: 6px; padding-top: 14px; border-top: 1.5px solid var(--ink); max-width: 640px; }
+.ac-ver-t { display: flex; align-items: center; gap: 9px; font-size: 1.0625rem; font-weight: 600; }
+.ac-ver-t i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: none; }
+.ac-veredicto.verificando .ac-ver-t i { background: var(--muted); animation: ac-late 700ms var(--e-st) infinite alternate; }
+.ac.rota .ac-ver-t { color: var(--alert); }
+.ac.rota .ac-ver-t i { background: var(--alert); border-radius: 0; }
+@keyframes ac-late { from { opacity: .25; } to { opacity: 1; } }
+.ac-ver-s { color: var(--muted); font-size: 14px; }
+.ac-checks { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.ac-checks li { display: inline-flex; align-items: center; gap: 6px; }
+.ac-checks li::before { content: ""; width: 7px; height: 7px; background: var(--ink); }
+.ac-checks li.no { color: var(--alert); }
+.ac-checks li.no::before { background: none; box-shadow: inset 0 0 0 1.5px var(--alert); }
+.ac-acc { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.ac-acc .btn { padding: 11px 20px; }
+.ac.rota .btn.imprimir { background: none; color: var(--alert); box-shadow: inset 0 0 0 1.5px var(--alert); }
+.ac-dist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; max-width: 520px; margin-top: 8px; }
+.ac-dist div { display: flex; align-items: center; gap: 9px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.ac-dist dd { margin: 0 0 0 auto; font-weight: 600; }
+.ac-sello { display: grid; gap: 10px; justify-items: center; }
+.relieve.ac-relieve { width: 100%; }
+/* El sello se asienta torcido unos 7°, como el de la entrada; sin WebGL, el plano también */
+.ac-plano { width: 88%; transform: rotate(-7deg); }
+.ac-sello-pie { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* Controles: agrupados por cláusula, con una traza que solo dibuja lo que existe */
+.ac-leyenda { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--muted); }
+.ac-leyenda span { display: inline-flex; align-items: center; gap: 7px; }
+.l-nodo { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); }
+.l-na { width: 22px; border-top: 1.5px dotted var(--muted); }
+.l-fin { width: 9px; height: 9px; background: var(--accent); }
+.ac-fila-g { display: grid; grid-template-columns: 48px minmax(0, 2.3fr) 150px minmax(64px, 1fr) minmax(64px, 1fr) minmax(64px, 1fr) 12px 34px; align-items: center; column-gap: 0; text-align: left; }
+.ac-fila-g > :nth-child(-n+3) { padding-right: 16px; }
+.ac-t-cab { font-size: 12.5px; color: var(--muted); padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); }
+.ac-t-cab span:nth-child(n+4) { text-align: center; }
+.ac-grupo-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 18px 0 8px; border-bottom: 1px solid var(--line); }
+.ac-grupo-cab b { font-weight: 600; }
+.ac-grupo-cab span { font-size: 13px; color: var(--muted); }
+.ac-fila { border-bottom: 1px solid var(--line); }
+.ac-fila-btn { width: 100%; min-height: 50px; padding: 8px 0; cursor: pointer; }
+.ac-fila-btn:hover, .ac-fila.abierta > .ac-fila-btn { background: var(--raise); }
+.f-cod { font-weight: 600; padding-left: 6px; }
+.f-est { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 14px; }
+.ac-tzs { display: contents; }
+.ac-tz { position: relative; height: 14px; }
+.ac-tz::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); border-top: 1.5px solid var(--ink); }
+.ac-tz.s-na::before { border-top: 1.5px dotted var(--line); }
+.ac-tz.s-si i, .ac-tz.s-falta i { position: absolute; left: calc(50% - 5px); top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
+.ac-tz.s-falta i { background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--alert); }
+.ac-tz em { position: absolute; left: calc(50% + 8px); top: -3px; font-size: 10.5px; font-style: normal; color: var(--muted); }
+.ac-fin { width: 10px; height: 10px; background: var(--accent); }
+.ac-fin.na { background: none; box-shadow: inset 0 0 0 1.5px var(--line); }
+.ac-fin.inc { background: none; box-shadow: inset 0 0 0 1.5px var(--alert); }
+.chev { justify-self: center; width: 9px; height: 9px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translate(-2px, -2px); transition: transform var(--d-state) var(--e-st); }
+.ac-fila.abierta .chev { transform: rotate(-135deg) translate(-2px, -2px); }
+.ac-det-w { overflow: hidden; }
+.ac-det { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 40px; padding: 8px 34px 24px 48px; }
+.ac-det h3 { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.ac-det-b { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.ac-det p { max-width: 70ch; }
+.ac-evid { display: grid; gap: 2px; margin-bottom: 10px; }
+.ac-evid .sub { font-size: 13px; }
+.ac-evid .hash { font-size: 11px; }
+.ac-det-hz { display: grid; gap: 8px; margin-bottom: 16px; }
+.ac-det-hz dl { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 3px 12px; font-size: 14px; margin: 0; }
+.ac-det-hz dt { color: var(--muted); }
+.ac-det-hz dd { margin: 0; }
+.ac-rec { padding: 8px 12px; background: var(--raise); display: grid; gap: 2px; font-size: 14px; }
+.ac-rec .sub { font-size: 13px; }
+.sev { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-weight: 600; font-size: 14px; }
+.sev i { display: inline-flex; gap: 2px; }
+.sev s { width: 4px; height: 12px; box-shadow: inset 0 0 0 1px var(--ink); }
+.sev s.on { background: var(--ink); }
+
+/* Hallazgos, de más a menos grave */
+.ac-hzs { display: grid; }
+.ac-hz { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 2.4fr); gap: 8px 32px; padding: 18px 0; border-top: 1px solid var(--line); }
+.ac-hz:first-child { border-top: 1.5px solid var(--ink); }
+.ac-hz-l { display: grid; gap: 6px; align-content: start; justify-items: start; }
+.ac-hz-l .sub { font-size: 14px; }
+.ac-hz-l .enlace { font-size: 13px; }
+.ac-hz-r { display: grid; gap: 8px; min-width: 0; }
+.ac-hz-r p { max-width: 72ch; }
+.ac-hz-r .lead { font-weight: 600; }
+.ac-hz-r .ac-rec { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; }
+.ac-hz-r .ac-rec .rot { grid-row: span 2; padding-top: 3px; }
+
+/* La postura del acta: sin marco de hoja, como una sección más */
+.ac-sec .postura { padding: 0; border: 0; background: none; }
+
+@media (max-width: 1180px) {
+  .ac { grid-template-columns: minmax(0, 1fr); }
+  .ac-indice { display: none; }
+}
+@media (max-width: 860px) {
+  .ac-res { grid-template-columns: minmax(0, 1fr); }
+  .ac-sello { order: -1; max-width: 360px; justify-self: center; width: 100%; }
+  .ac-fila-g { grid-template-columns: 44px minmax(0, 1fr) 26px; grid-template-areas: "cod nom chev" "cod est chev" "cod tz chev"; row-gap: 6px; }
+  .ac-t-cab { display: none; }
+  .ac-fila-btn .f-cod { grid-area: cod; align-self: start; }
+  .ac-fila-btn .f-nom { grid-area: nom; }
+  .ac-fila-btn .f-est { grid-area: est; }
+  .ac-fila-btn .ac-tzs { grid-area: tz; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 12px; max-width: 260px; }
+  .ac-fila-btn .chev { grid-area: chev; }
+  .ac-det { grid-template-columns: minmax(0, 1fr); padding: 8px 12px 20px 44px; }
+  .ac-hz { grid-template-columns: minmax(0, 1fr); }
+}

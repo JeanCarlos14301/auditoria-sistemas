@@ -1,0 +1,48 @@
+// Bitácora de ejemplo para el sello de la pantalla de entrada.
+// Antes de iniciar sesión no se puede pedir ninguna bitácora a la API, así que la entrada reproduce esta:
+// los 39 eslabones reales (tipo de evento y hash) de la auditoría de ejemplo que genera la suite QA del backend,
+// con una frase que cuenta cada evento en lenguaje claro (sacada de su payload_canonico).
+// No contiene datos de ninguna organización real ni secretos: un hash no permite recuperar su contenido.
+export const BITACORA_EJEMPLO: readonly { t: string; h: string; f: string }[] = [
+  {"t":"CREACION_AUDITORIA","h":"726ebba589d32b45a281130d8ae97221599c604cefd10d7869f16246ce5f74ce","f":"Se crea la auditoría, en Borrador"},
+  {"t":"ALCANCE_DEFINIDO","h":"f49af182a980844263e5a66f799819b87fb2351dc31add93264c45d9dbb99ae3","f":"Se define el alcance: 13 controles"},
+  {"t":"EVALUACION_CONTROL","h":"794dbb6eb44bd418b598cdd9f7f313235d262cce9bee616ae4f7030908394edd","f":"Se evalúa el control 5.1: Implementado"},
+  {"t":"REGISTRO_EVIDENCIA","h":"8b7d57e51f49c5525927bfbecc14cb9326106d07bc6f73f4ce51c77cb249ed7a","f":"Evidencia registrada para el control 5.1"},
+  {"t":"EVALUACION_CONTROL","h":"7b4c47ebc5290e3806d738b5b9680439a75403aec202516d1db18c54bdfde576","f":"Se evalúa el control 5.15: Implementado"},
+  {"t":"REGISTRO_EVIDENCIA","h":"e3d8a212bb3cec4b6b601ed512271edffab5ce966e386fc4d00252e703eec182","f":"Evidencia registrada para el control 5.15"},
+  {"t":"EVALUACION_CONTROL","h":"ca0f9ff01aa6a96c83bc657c093f662bec66db5bc2632d7826ae8178221b2311","f":"Se evalúa el control 5.18: Implementado"},
+  {"t":"REGISTRO_EVIDENCIA","h":"d8c58dd0e111e175d303c77acbeb20253d499ba3969c944af1a77eaaf403b149","f":"Evidencia registrada para el control 5.18"},
+  {"t":"EVALUACION_CONTROL","h":"a9bb1686dd377367c91e6c904d03f59bd5a4e9ee7bc413183d6f6a2dd73416f6","f":"Se evalúa el control 5.24: Implementado"},
+  {"t":"EVALUACION_CONTROL","h":"1913e14ad0cf63520917c5cc6917d85a95131f8db4f9c1d992d5831e50175bce","f":"Se evalúa el control 6.3: Parcial"},
+  {"t":"REGISTRO_HALLAZGO","h":"ab1f03e4e4b4f280b88ff70e21bba6296a3ea46153a8796faf925f62f5275446","f":"Hallazgo en el control 6.3, severidad alta"},
+  {"t":"REGISTRO_RECOMENDACION","h":"26376fd0e57534669aad14851dae7350a3e6ab7850cd0c1c4fac7ab0d303261a","f":"Recomendación para el hallazgo del control 6.3"},
+  {"t":"EVALUACION_CONTROL","h":"6b539a81a843cca862dec9be69b18529dd138889d4bc3d7bc0fc5c1e240df3f7","f":"Se evalúa el control 7.2: Parcial"},
+  {"t":"REGISTRO_HALLAZGO","h":"b5396a813f58c867dd375f3a9deb9989f31cd23cee050d808e470b3dfcb2b904","f":"Hallazgo en el control 7.2, severidad media"},
+  {"t":"REGISTRO_RECOMENDACION","h":"ccb16e4beed465103744c1ad97f8f07490e212b536f8c819c62a93bced86490e","f":"Recomendación para el hallazgo del control 7.2"},
+  {"t":"EVALUACION_CONTROL","h":"84b93838e976a89729983fc5762473569f0d67117262519f2f4ebce4560c861d","f":"Se evalúa el control 7.4: Parcial"},
+  {"t":"REGISTRO_HALLAZGO","h":"48ef6636931f2a9130e2e606d3daa06c57d6ab6dde38025e83019acc0583282f","f":"Hallazgo en el control 7.4, severidad baja"},
+  {"t":"REGISTRO_RECOMENDACION","h":"51e0b66ca9d7bc48568eb56e59d40418ac1fd7c679a030716ca851fc29ffd369","f":"Recomendación para el hallazgo del control 7.4"},
+  {"t":"EVALUACION_CONTROL","h":"8eadd2ec6305c0c557d6e929e6305d35a11b6df60404d05d42089a10f210eab5","f":"Se evalúa el control 8.5: Parcial"},
+  {"t":"REGISTRO_HALLAZGO","h":"de8e2fbdfc964d0734705f19d6cda2776194f8f39346056c5eb7dba210a7c6a3","f":"Hallazgo en el control 8.5, severidad alta"},
+  {"t":"REGISTRO_RECOMENDACION","h":"26db6dc45bd90b04f5b22df1a941729ce6838ae8f0cb6fb88ef1785ca01c48ec","f":"Recomendación para el hallazgo del control 8.5"},
+  {"t":"EVALUACION_CONTROL","h":"268133990673113735cb91cb8a821b716eefe09423a458b5c491b39fbb3f92c1","f":"Se evalúa el control 8.7: Parcial"},
+  {"t":"REGISTRO_HALLAZGO","h":"32abfecc8c44cd472f28d520620fa853c0b1d31f37c13c0f5dff49f2cb7c6e90","f":"Hallazgo en el control 8.7, severidad media"},
+  {"t":"REGISTRO_RECOMENDACION","h":"3140f04fa11df05ed7dd025009719bb1c6ad62d0253d2344706fec05ad474295","f":"Recomendación para el hallazgo del control 8.7"},
+  {"t":"EVALUACION_CONTROL","h":"d94f8a1ce7e955ef9ed2c89f0abb96c0de7f9d768772e58d7658f5510884d1bb","f":"Se evalúa el control 8.8: No implementado"},
+  {"t":"EVALUACION_CONTROL","h":"a17ba38209c9a1389ad0652c1745312856cafd891b1ade638fa5d29c90cddff0","f":"Se evalúa el control 8.12: No implementado"},
+  {"t":"REGISTRO_HALLAZGO","h":"2f96d67e3e129d7ae61d5d1e17bb8c649f4d6dfac798a691b7f1cbfa82e5b4b9","f":"Hallazgo en el control 8.12, severidad alta"},
+  {"t":"REGISTRO_RECOMENDACION","h":"94e6a1c3db4869ffd916b3a26a5256b9a335e8f4eeba3160b8c9bf055583c689","f":"Recomendación para el hallazgo del control 8.12"},
+  {"t":"EVALUACION_CONTROL","h":"21661c7b5d4bc34aab852598b56ef06c14f5525c8c5a869dc47e3d5dbd4ab027","f":"Se evalúa el control 8.15: No aplica"},
+  {"t":"EVALUACION_CONTROL","h":"735a1eb96e3e93d847b6f5e0d6eec4a215152ce2dbefbdfa6356139e8fef0fa5","f":"Se evalúa el control 8.13: No implementado"},
+  {"t":"REGISTRO_HALLAZGO","h":"e7ef1d99cc9eb042fe8ba86b6af1cfb434990cfdd77510d715840825a08e9fc4","f":"Hallazgo en el control 8.13, severidad media"},
+  {"t":"CAMBIO_ESTADO","h":"34e20ca1989c85d420573dcfff6b7d5122719de139f0bd3789289ec4aab33367","f":"La auditoría pasa a en revisión"},
+  {"t":"CAMBIO_ESTADO","h":"a9688a38d08724c3c57a04f9f4d2a06d37bf088d9e3e94ec0b0b66701fc761f7","f":"La auditoría pasa a en ejecución"},
+  {"t":"CAMBIO_ESTADO","h":"1890fc61ca59de1dc16f200d9770009ee124593148bb8bc6685c1e939ed7d972","f":"La auditoría pasa a en revisión"},
+  {"t":"REGISTRO_EVIDENCIA","h":"02799468e91b00c8fad8c16750b6aaf2822dc7f5f922e75359d372fa82c06677","f":"Evidencia registrada para el control 5.24"},
+  {"t":"REGISTRO_HALLAZGO","h":"627fc09a6e54e15e414fd11dbab32345b404935325523fa1d8f7e208894f4012","f":"Hallazgo en el control 8.8, severidad baja"},
+  {"t":"REGISTRO_RECOMENDACION","h":"8278f55eab6ba81315ddcf588ba449a0a7498eb7a927113877d632e82a924fb7","f":"Recomendación para el hallazgo del control 8.8"},
+  {"t":"REGISTRO_RECOMENDACION","h":"a05641a46c2e5f6846cb08bb9f1d46a7d3409c59c53e59ab8c62f32dd422932b","f":"Recomendación para el hallazgo del control 8.13"},
+  {"t":"CIERRE_INFORME","h":"0dd4148daba2f9216a374c27887c7d23c2246b5313f15a423c39dbefae8cf41a","f":"Se cierra con un cumplimiento del 33,3 %"},
+];
+
+export const SELLO_EJEMPLO = { algoritmo: "HMAC-SHA256", cumplimiento_pct: 33.3, fecha: "2026-11-12" } as const;
