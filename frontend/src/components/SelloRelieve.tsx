@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Escena } from './relieve/escena';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type RefObject } from 'react';
+import type { Escena, OpcionesRelieve } from './relieve/escena';
 
 interface Props {
   tipos: readonly string[];
@@ -10,22 +10,47 @@ interface Props {
   ruptura: number | null;
   /** Al cambiar, el relieve se vuelve a componer desde cero (por ejemplo, tras verificar de nuevo). */
   pulso?: number;
+  /** Clase extra para la caja (por ejemplo, para que ocupe un panel entero en vez de un cuadrado). */
+  className?: string;
+  /** Qué parte del lado corto ocupa el sello. Ver OpcionesRelieve. */
+  encuadre?: OpcionesRelieve['encuadre'];
+  /** Zona donde la luz sigue al puntero; por defecto, la caja del sello. */
+  zona?: RefObject<HTMLElement>;
+  inclinacion?: number;
+  /** El relieve ya está a la vista y empieza a componerse (no se llama si se queda el sello plano). */
+  onListo?: () => void;
   /** El sello plano: se muestra mientras three.js se descarga y se queda si no hay WebGL. */
   children: ReactNode;
 }
 
+/** Lo que una página puede pedirle al relieve. Sin WebGL, no hace nada. */
+export interface ControlRelieve {
+  estampar(): Promise<void>;
+  luzDesde(x: number, y: number): void;
+}
+
 /**
- * El sello en relieve. three.js (unos 171 KB comprimidos) se descarga solo cuando este componente
+ * El sello en relieve. three.js (unos 125 KB comprimidos) se descarga solo cuando este componente
  * está a punto de entrar en pantalla. Si la descarga o WebGL fallan, el sello plano se queda
  * y el resto de la página sigue funcionando.
  */
-export function SelloRelieve({ tipos, hashFinal, cifra, orla, ruptura, pulso = 0, children }: Props) {
+export const SelloRelieve = forwardRef<ControlRelieve, Props>(function SelloRelieve(
+  { tipos, hashFinal, cifra, orla, ruptura, pulso = 0, className, encuadre, zona, inclinacion, onListo, children }, ref,
+) {
   const caja = useRef<HTMLDivElement>(null), canvas = useRef<HTMLCanvasElement>(null);
   const escena = useRef<Escena | null>(null);
   const [listo, setListo] = useState(false);
   const primera = useRef(true);
   const datos = useRef({ ruptura, orla });
   datos.current = { ruptura, orla };
+  // Opciones y aviso, leídos al crear la escena: cambiarlos después no la reconstruye
+  const opciones = useRef({ encuadre, zona, inclinacion, onListo });
+  opciones.current = { encuadre, zona, inclinacion, onListo };
+
+  useImperativeHandle(ref, () => ({
+    estampar: () => escena.current?.estampar() ?? Promise.resolve(),
+    luzDesde: (x, y) => escena.current?.luzDesde(x, y),
+  }), []);
 
   useEffect(() => {
     const el = caja.current, lienzo = canvas.current;
@@ -37,10 +62,13 @@ export function SelloRelieve({ tipos, hashFinal, cifra, orla, ruptura, pulso = 0
       try {
         const [{ crearEscena }] = await Promise.all([import('./relieve/escena'), document.fonts?.ready]);
         if (!vivo) return;
-        const e = crearEscena(lienzo, el, { tipos, hashFinal, cifra, orla: datos.current.orla, lema: datos.current.ruptura === null ? 'ÍNTEGRA' : 'NO ÍNTEGRA' });
+        const o = opciones.current;
+        const e = crearEscena(lienzo, el, { tipos, hashFinal, cifra, orla: datos.current.orla, lema: datos.current.ruptura === null ? 'ÍNTEGRA' : 'NO ÍNTEGRA' },
+          { encuadre: o.encuadre, zona: o.zona?.current ?? undefined, inclinacion: o.inclinacion });
         if (datos.current.ruptura !== null) e.ruptura(datos.current.ruptura, datos.current.orla, 'NO ÍNTEGRA');
         escena.current = e; primera.current = true; setListo(true);
         e.visible(true); e.animar(true);
+        o.onListo?.();
       } catch { /* sin WebGL o sin red: se queda el sello plano */ }
     };
     const cerca = new IntersectionObserver(([x]) => { if (x!.isIntersecting) void cargar(); }, { rootMargin: '500px 0px' });
@@ -65,9 +93,9 @@ export function SelloRelieve({ tipos, hashFinal, cifra, orla, ruptura, pulso = 0
   useEffect(() => { if (pulso > 0) escena.current?.animar(true); }, [pulso]);
 
   return (
-    <div className="relieve" ref={caja}>
+    <div className={`relieve${className ? ` ${className}` : ''}`} ref={caja}>
       <canvas ref={canvas} hidden={!listo} aria-hidden="true" />
       <div className="relieve-plano" hidden={listo}>{children}</div>
     </div>
   );
-}
+});

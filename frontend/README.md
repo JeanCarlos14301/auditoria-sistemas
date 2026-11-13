@@ -32,7 +32,7 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 
 | Ruta | Pantalla |
 |---|---|
-| `/login` | **Entrar**: junto al formulario, un sello se compone eslabón a eslabón con una bitácora de ejemplo |
+| `/login` | **Entrar**: a pantalla completa, junto al formulario, el sello en relieve de una auditoría de ejemplo se compone mientras el pie cuenta cada evento; la luz sigue al cursor y, al entrar, el sello se vuelve a estampar |
 | `/auditorias` | **Índice**: filtro por estado y orden, con las filas recolocándose; cada fila dibuja su paso por los estados y su cumplimiento |
 | `/auditorias/nueva` | **Nueva auditoría** (RF01, CP-02): la hoja en blanco, antes de tener estado |
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): catálogo con filtro por categoría y contador de 10 a 15 siempre visible |
@@ -59,7 +59,7 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 
 - **Tokens** en `src/styles/tokens.css`: tema claro y oscuro, tipografía (Libre Franklin para el texto; Newsreader como acento, solo en la marca, el título de la hoja y la cifra de cumplimiento) y las dos curvas de movimiento.
 - **El eslabón que falta.** Cada control lleva su traza: evidencia, hallazgo y recomendación. Donde falta un eslabón, la línea se corta (`src/lib/traza.ts`).
-- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra. En el acta cerrada se dibuja en relieve con three.js (`src/components/SelloRelieve.tsx`); el sello plano se queda como respaldo mientras carga o si no hay WebGL.
+- **El sello.** Un trazo por evento de la bitácora y una roseta generada con el hash final, distinta en cada auditoría (`src/lib/sello.ts`, `src/components/Sello.tsx`). Con la cadena alterada, el sello no cierra. En la entrada y en el acta cerrada se dibuja en relieve con three.js (`src/components/SelloRelieve.tsx`); el sello plano se queda como respaldo mientras carga o si no hay WebGL.
 
 ### Movimiento
 
@@ -78,13 +78,13 @@ Cada librería hace una cosa (`src/motion/gsap.ts`, `src/motion/efectos.ts`):
 | GSAP | Recolocar filas (Flip), historia con pin y scrub (ScrollTrigger), texto por letras (SplitText), la llave del contador (DrawSVG), fichas que caen (Physics2D) |
 | anime.js | Entradas escalonadas, también en rejilla desde el centro, y la altura de los trazos del relieve (objetos planos) |
 | Motion | Resortes con velocidad: sacudida de error, indicador de pestañas, vuelta del botón de sellar |
-| three.js | El sello en relieve. 125 kB comprimidos en un trozo aparte que solo se descarga al acercarse al sello de un acta cerrada |
+| three.js | El sello en relieve de la entrada y del acta cerrada. 125 kB comprimidos en un trozo aparte que se descarga después de pintar la página: el formulario funciona desde el primer momento |
 
 ### Impresión
 
 La vista del informe enseña en pantalla las mismas hojas que se imprimen: cada una mide 794 × 1123 px (A4 a 96 ppp) y se escala con `--s` para caber. `src/lib/paginar.ts` reparte los bloques en hojas a partir de sus alturas medidas (los títulos no se quedan solos y las cabeceras de tabla se repiten), y `src/styles/informe.css` trae la hoja de estilos de impresión: fuera la interfaz, una hoja por página y sin los márgenes del navegador. «Imprimir o guardar PDF» abre el diálogo del navegador.
 
-`src/assets/bitacoraEjemplo.ts` es la bitácora (tipos de evento y hashes) de una auditoría de prueba local: la usa el sello de la entrada, donde todavía no hay sesión.
+`src/assets/bitacoraEjemplo.ts` es la bitácora (tipo de evento, hash y una frase en lenguaje claro) de una auditoría de prueba local: la usa el sello de la entrada, donde todavía no hay sesión.
 
 ## Estructura
 

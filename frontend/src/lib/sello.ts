@@ -9,6 +9,8 @@ const CLASE: Record<string, ClaseEvento> = {
 export const claseEvento = (tipoEvento: string): ClaseEvento => CLASE[tipoEvento] ?? 'EST';
 
 export const SELLO = { lado: 240, centro: 120, radioExterior: 112 } as const;
+/** Milisegundos entre un trazo y el siguiente cuando el sello en relieve se compone desde cero (para narrarlo a la vez). */
+export const PASO_TRAZO = 40;
 /** Radio interior del trazo: cuanto menor, más largo. */
 export const RADIO_INTERIOR: Record<ClaseEvento, number> = { EST: 94, EVA: 100, EVI: 105, HAL: 105, REC: 105, CIE: 90 };
 /** Radio base de cada una de las tres curvas de la roseta. */
