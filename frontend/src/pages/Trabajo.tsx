@@ -150,7 +150,7 @@ function Vista({ id, datos }: { id: number; datos: AuditoriaDetalle }) {
         <div className="tr-acc">
           <button className="btn sec" type="button" disabled={cambiar.isPending} onClick={pasar}>{destino === 'EN_REVISION' ? 'Pasar a revisión' : 'Volver a ejecución'}</button>
           {cambiar.isError ? <MensajeError>{cambiar.error.message}</MensajeError>
-            : cambiar.isSuccess && destino === 'EN_EJECUCION' && <p className="aviso entra" role="status">Estado actualizado: {NOMBRE_ESTADO[cambiar.data.auditoria.estado]}.</p>}
+            : cambiar.isSuccess && cambiar.variables === 'EN_EJECUCION' && <p className="aviso entra" role="status">Estado actualizado: {NOMBRE_ESTADO[cambiar.data.auditoria.estado]}.</p>}
         </div>
       </header>
 
@@ -290,6 +290,8 @@ function Detalle({ idAuditoria, ev, siguiente, ultimoPendiente, onIr, onGuardado
   const [abierto, setAbierto] = useState<Abierto>(null);
   const traza = useRef<HTMLDivElement>(null), primeraTraza = useRef(true);
   const cerrar = useCallback(() => setAbierto(null), []);
+  /** Al terminar de guardar, se cierra ese formulario solo si sigue abierto (pudo abrirse otro mientras se recargaba). */
+  const hechoDe = (k: Exclude<Abierto, null>) => () => setAbierto(a => (typeof k === 'string' ? a === k : typeof a === 'object' && a?.recomendacionDe === k.recomendacionDe) ? null : a);
   const nodos = nodosDe({ ...ev, estado: estado ?? 'NO_IMPLEMENTADO' });
   const nuevosEv = useNuevos(ev.evidencias.map(v => v.id)), nuevosHz = useNuevos(ev.hallazgos.map(h => h.id)), nuevasRec = useNuevos(ev.hallazgos.flatMap(h => h.recomendaciones.map(r => r.id)));
   const nudo = (k: number) => () => traza.current?.querySelector(`.tt[data-k="${k}"] i`) ?? null;
@@ -333,7 +335,7 @@ function Detalle({ idAuditoria, ev, siguiente, ultimoPendiente, onIr, onGuardado
 
       <section className="td-sec">
         <div className="td-sec-cab"><h3>Evidencias<span className="num">{ev.evidencias.length}</span></h3>{abierto !== 'evidencia' && <button className="btn sec min" type="button" data-abrir="evidencia" onClick={() => setAbierto('evidencia')}>Registrar evidencia</button>}</div>
-        {abierto === 'evidencia' && <FormEvidencia idAuditoria={idAuditoria} idEvaluacion={ev.id} destino={nudo(0)} onHecho={cerrar} onCancelar={cerrar} />}
+        {abierto === 'evidencia' && <FormEvidencia idAuditoria={idAuditoria} idEvaluacion={ev.id} destino={nudo(0)} onHecho={hechoDe('evidencia')} onCancelar={cerrar} />}
         {ev.evidencias.length ? (
           <ul className="reg">{ev.evidencias.map(v => (
             <li key={v.id} className={`evd${nuevosEv.has(v.id) ? ' fresco' : ''}`}>
@@ -347,12 +349,12 @@ function Detalle({ idAuditoria, ev, siguiente, ultimoPendiente, onIr, onGuardado
 
       <section className="td-sec">
         <div className="td-sec-cab"><h3>Hallazgos<span className="num">{ev.hallazgos.length}</span></h3>{abierto !== 'hallazgo' && <button className="btn sec min" type="button" data-abrir="hallazgo" onClick={() => setAbierto('hallazgo')}>Registrar hallazgo</button>}</div>
-        {abierto === 'hallazgo' && <FormHallazgo idAuditoria={idAuditoria} idEvaluacion={ev.id} criterio={c.criterio_evaluacion} destino={nudo(1)} onHecho={cerrar} onCancelar={cerrar} />}
+        {abierto === 'hallazgo' && <FormHallazgo idAuditoria={idAuditoria} idEvaluacion={ev.id} criterio={c.criterio_evaluacion} destino={nudo(1)} onHecho={hechoDe('hallazgo')} onCancelar={cerrar} />}
         {ev.hallazgos.length ? (
           <ul className="reg">{ev.hallazgos.map(h => (
             <FichaHallazgo key={h.id} h={h} nuevo={nuevosHz.has(h.id)} nuevas={nuevasRec}
               abierto={typeof abierto === 'object' && abierto?.recomendacionDe === h.id} onAbrir={() => setAbierto({ recomendacionDe: h.id })}
-              form={<FormRecomendacion idAuditoria={idAuditoria} idHallazgo={h.id} destino={nudo(2)} onHecho={cerrar} onCancelar={cerrar} />} />
+              form={<FormRecomendacion idAuditoria={idAuditoria} idHallazgo={h.id} destino={nudo(2)} onHecho={hechoDe({ recomendacionDe: h.id })} onCancelar={cerrar} />} />
           ))}</ul>
         ) : <p className="vacio">Sin hallazgos registrados.</p>}
       </section>

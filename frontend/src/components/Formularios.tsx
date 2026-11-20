@@ -22,7 +22,11 @@ interface Comun {
  */
 function useAlGuardar(idAuditoria: number, form: RefObject<HTMLFormElement>, destino: Comun['destino'], onHecho: () => void) {
   const recargar = useRefrescarAuditoria(idAuditoria);
-  return useCallback(async () => {
+  // Desde que la API acepta el registro hasta que el formulario se cierra pasan el pliegue y la recarga:
+  // mientras, el botón sigue desactivado (un segundo clic guardaría un duplicado que la bitácora ya no deja borrar).
+  const [guardando, setGuardando] = useState(false);
+  const alGuardar = useCallback(async () => {
+    setGuardando(true);
     const el = form.current, hueco = destino?.() ?? null;
     if (el && hueco && !prefersReducedMotion()) {
       const h = hueco.getBoundingClientRect(), r = el.getBoundingClientRect();
@@ -31,8 +35,11 @@ function useAlGuardar(idAuditoria: number, form: RefObject<HTMLFormElement>, des
       });
     }
     await recargar();
+    // El aviso llega siempre (aunque la recarga ya haya retirado el formulario); quien lo recibe solo cierra
+    // el formulario si sigue siendo este, por si mientras tanto se abrió otro
     onHecho();
   }, [recargar, form, destino, onHecho]);
+  return [alGuardar, guardando] as const;
 }
 type Errores = Record<string, string>;
 
@@ -69,7 +76,7 @@ const limpiar = (e: Errores): Errores => Object.fromEntries(Object.entries(e).fi
 export function FormEvidencia({ idAuditoria, idEvaluacion, onHecho, onCancelar, destino }: Comun & { idEvaluacion: number }) {
   const uid = useId();
   const refForm = useRef<HTMLFormElement>(null);
-  const alGuardar = useAlGuardar(idAuditoria, refForm, destino, onHecho);
+  const [alGuardar, guardando] = useAlGuardar(idAuditoria, refForm, destino, onHecho);
   const m = useCrearEvidencia(idAuditoria);
   const [descripcion, setDescripcion] = useState('');
   const [fuente, setFuente] = useState<FuenteEvidencia>('DOCUMENTAL');
@@ -89,7 +96,7 @@ export function FormEvidencia({ idAuditoria, idEvaluacion, onHecho, onCancelar, 
     m.mutate({ idEvaluacion, body: { descripcion: descripcion.trim(), fuente, fecha_recoleccion: fechaRec || undefined, referencia_archivo: referencia.trim() || null } }, { onSuccess: () => { void alGuardar(); } });
   };
   return (
-    <Marco refForm={refForm} titulo="Registrar evidencia" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending} error={m.error} enviar="Guardar evidencia">
+    <Marco refForm={refForm} titulo="Registrar evidencia" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending || guardando} error={m.error} enviar="Guardar evidencia">
       <Campo id={`${uid}d`} etiqueta="Descripción" error={err.descripcion}><textarea className="campo" autoFocus value={descripcion} onChange={e => al('descripcion', setDescripcion)(e.target.value)} {...conError(`${uid}d`, err.descripcion)} /></Campo>
       <div className="dos">
         <Campo id={`${uid}f`} etiqueta="Fuente" error={err.fuente}><select className="campo" value={fuente} onChange={e => setFuente(e.target.value as FuenteEvidencia)} {...conError(`${uid}f`, err.fuente)}>{FUENTES.map(f => <option key={f} value={f}>{NOMBRE_FUENTE[f]}</option>)}</select></Campo>
@@ -104,7 +111,7 @@ export function FormEvidencia({ idAuditoria, idEvaluacion, onHecho, onCancelar, 
 export function FormHallazgo({ idAuditoria, idEvaluacion, criterio, onHecho, onCancelar, destino }: Comun & { idEvaluacion: number; criterio: string }) {
   const uid = useId();
   const refForm = useRef<HTMLFormElement>(null);
-  const alGuardar = useAlGuardar(idAuditoria, refForm, destino, onHecho);
+  const [alGuardar, guardando] = useAlGuardar(idAuditoria, refForm, destino, onHecho);
   const m = useCrearHallazgo(idAuditoria);
   const [condicion, setCondicion] = useState('');
   const [causa, setCausa] = useState('');
@@ -125,7 +132,7 @@ export function FormHallazgo({ idAuditoria, idEvaluacion, criterio, onHecho, onC
     m.mutate({ idEvaluacion, body: { condicion: condicion.trim(), causa: causa.trim(), efecto_riesgo: efecto.trim(), severidad } }, { onSuccess: () => { void alGuardar(); } });
   };
   return (
-    <Marco refForm={refForm} titulo="Registrar hallazgo" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending} error={m.error} enviar="Guardar hallazgo">
+    <Marco refForm={refForm} titulo="Registrar hallazgo" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending || guardando} error={m.error} enviar="Guardar hallazgo">
       <Campo id={`${uid}c`} etiqueta="Condición" nota="qué se encontró" error={err.condicion}><textarea className="campo" autoFocus value={condicion} onChange={e => al('condicion', setCondicion)(e.target.value)} {...conError(`${uid}c`, err.condicion)} /></Campo>
       <div className="campo-w"><p className="etq">Criterio <small>lo toma la API del catálogo</small></p><p className="cita">{criterio}</p></div>
       <Campo id={`${uid}u`} etiqueta="Causa" nota="por qué ocurre" error={err.causa}><textarea className="campo" value={causa} onChange={e => al('causa', setCausa)(e.target.value)} {...conError(`${uid}u`, err.causa)} /></Campo>
@@ -139,7 +146,7 @@ export function FormHallazgo({ idAuditoria, idEvaluacion, criterio, onHecho, onC
 export function FormRecomendacion({ idAuditoria, idHallazgo, onHecho, onCancelar, destino }: Comun & { idHallazgo: number }) {
   const uid = useId();
   const refForm = useRef<HTMLFormElement>(null);
-  const alGuardar = useAlGuardar(idAuditoria, refForm, destino, onHecho);
+  const [alGuardar, guardando] = useAlGuardar(idAuditoria, refForm, destino, onHecho);
   const m = useCrearRecomendacion(idAuditoria);
   const [descripcion, setDescripcion] = useState('');
   const [prioridad, setPrioridad] = useState<Nivel | ''>('');
@@ -158,7 +165,7 @@ export function FormRecomendacion({ idAuditoria, idHallazgo, onHecho, onCancelar
     m.mutate({ idHallazgo, body: { descripcion: descripcion.trim(), prioridad, plazo_estimado: plazo.trim() } }, { onSuccess: () => { void alGuardar(); } });
   };
   return (
-    <Marco refForm={refForm} titulo="Registrar recomendación" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending} error={m.error} enviar="Guardar recomendación">
+    <Marco refForm={refForm} titulo="Registrar recomendación" onSubmit={enviar} onCancelar={onCancelar} enviando={m.isPending || guardando} error={m.error} enviar="Guardar recomendación">
       <Campo id={`${uid}d`} etiqueta="Descripción" error={err.descripcion}><textarea className="campo" autoFocus value={descripcion} onChange={e => al('descripcion', setDescripcion)(e.target.value)} {...conError(`${uid}d`, err.descripcion)} /></Campo>
       <div className="dos">
         <Campo id={`${uid}p`} etiqueta="Prioridad" error={err.prioridad}><select className="campo" value={prioridad} onChange={e => al('prioridad', setPrioridad)(e.target.value as Nivel | '')} {...conError(`${uid}p`, err.prioridad)}><option value="">Elige…</option>{NIVELES.map(n => <option key={n} value={n}>{NOMBRE_NIVEL[n]}</option>)}</select></Campo>

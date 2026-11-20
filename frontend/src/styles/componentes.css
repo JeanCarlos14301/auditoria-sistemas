@@ -71,6 +71,17 @@ textarea.campo { min-height: 72px; resize: vertical; line-height: 1.45; }
 /* Todavía sin evaluar: solo un contorno discontinuo */
 .marca[data-v="PEND"] { box-shadow: none; outline: 1.5px dashed var(--na); outline-offset: -1.5px; }
 
+/* Los cuatro estados de la auditoría (la reproducción de la historia); el indicador se desplaza con --idx */
+.estados { position: relative; min-width: 0; --idx: 0; }
+.estados ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-size: 12.5px; color: var(--muted); }
+.estados li { padding: 6px 2px 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estados li[aria-current] { color: var(--ink); font-weight: 600; }
+.estados::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; border-top: 1px solid var(--line); }
+.estados-marca { position: absolute; left: 0; bottom: 0; width: 25%; height: 3px; background: var(--accent); transform: translateX(calc(var(--idx) * 100%)); transition: transform var(--d-move) var(--e-st), opacity var(--d-state) linear; }
+/* Antes del primer evento todavía no hay estado: el indicador no se ve */
+.estados[data-sin] .estados-marca { opacity: 0; }
+@media (max-width: 420px) { .estados ol { font-size: 11.5px; } .estados li { padding-inline: 0; text-overflow: clip; } }
+
 /* Grupo de pestañas con un indicador que se desliza con resorte (efectos.moverIndicador) */
 .chips { position: relative; display: flex; gap: 2px; padding: 3px; background: var(--raise); border-radius: var(--r); overflow-x: auto; max-width: 100%; scrollbar-width: none; justify-self: start; }
 .chips::-webkit-scrollbar { display: none; }

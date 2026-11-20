@@ -35,6 +35,8 @@ export default function NuevaAuditoria() {
   const err: Errores = { ...(m.error?.porCampo ?? {}), ...local };
   const mal = (Object.keys(err) as Campo[]).filter(k => err[k]);
   const usuario = sesion.estado.fase === 'activa' ? sesion.estado.usuario.nombre : '';
+  const vivo = useRef(true);
+  useEffect(() => { vivo.current = true; return () => { vivo.current = false; }; }, []);
 
   /** Al corregir un campo se retira su aviso. */
   const al = (campo: Campo, set: (v: string) => void) => (v: string) => { set(v); if (local[campo]) setLocal(({ [campo]: _, ...resto }) => resto); };
@@ -69,11 +71,13 @@ export default function NuevaAuditoria() {
     if (primero) { sacudir(acc.current); document.getElementById(`nv-${primero}`)?.focus(); return; }
     m.mutate({ organizacion: organizacion.trim(), alcance: alcance.trim(), fecha_inicio: inicio, fecha_fin: fin }, {
       onSuccess: async a => {
-        // Creada: recibe su número y Borrador toma su fecha; mientras, se traen sus datos para abrirla sin esperas
+        // Creada: recibe su número y Borrador toma su fecha; mientras, se traen sus datos para abrirla sin esperas.
+        // La hoja sube a su principio, que es donde estará la cabecera: así el viaje de las piezas parte de donde se ven.
         setCreada(a);
+        scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
         const espera = new Promise(r => setTimeout(r, prefersReducedMotion() ? 300 : 1100));
         await Promise.all([precargar(a.id).catch(() => undefined), espera]);
-        ir(`/auditorias/${a.id}`, { replace: true, state: { viaje: medirViaje(form.current) } });
+        if (vivo.current) ir(`/auditorias/${a.id}`, { replace: true, state: { viaje: medirViaje(form.current) } });
       },
     });
   };

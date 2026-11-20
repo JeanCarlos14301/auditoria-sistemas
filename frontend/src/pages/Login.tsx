@@ -28,6 +28,14 @@ const GIRO = -0.12;
  * relieve de una auditoría de ejemplo. Sus trazos se levantan uno a uno mientras el pie cuenta cada evento en lenguaje
  * claro; la luz sigue al puntero por toda la pantalla. Al entrar, el sello se vuelve a estampar y la hoja se archiva.
  */
+/**
+ * A dónde volver después de entrar: solo una ruta de la propia app. Una dirección como «//otro.sitio» o «/\\otro.sitio»
+ * (que el navegador puede leer como otro dominio) no se sigue y se va al índice.
+ */
+function destinoSeguro(desde: unknown): string {
+  return typeof desde === 'string' && desde.startsWith('/') && !desde.startsWith('//') && !desde.startsWith('/\\') ? desde : '/auditorias';
+}
+
 export default function Login() {
   const { estado, entrar } = useSesion();
   const loc = useLocation();
@@ -81,7 +89,7 @@ export default function Login() {
     return () => ctx.revert();
   }, []);
 
-  if (estado.fase === 'activa' && !sellando) return <Navigate to={(loc.state as { desde?: string } | null)?.desde ?? '/auditorias'} replace />;
+  if (estado.fase === 'activa' && !sellando) return <Navigate to={destinoSeguro((loc.state as { desde?: unknown } | null)?.desde)} replace />;
 
   const fallar = (mensaje: string) => { setError(mensaje); sacudir(form.current); };
   const enviar = async (e: FormEvent) => {

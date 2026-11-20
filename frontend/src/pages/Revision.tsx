@@ -33,7 +33,7 @@ type Vista = 'pend' | 'todos';
  * Cada anomalía se arregla en su fila: el formulario se despliega, se pliega hacia el nudo que faltaba al guardar
  * y una señal baja hasta la puerta. Si la auditoría se puede cerrar lo decide la API (GET /trazabilidad).
  */
-export function Revision({ id, datos, onSellada }: { id: number; datos: AuditoriaDetalle; onSellada: () => void }) {
+export function Revision({ id, datos, onCerrando, onSellada }: { id: number; datos: AuditoriaDetalle; onCerrando: (si: boolean) => void; onSellada: () => void }) {
   const { auditoria, evaluaciones } = datos;
   const cerrada = auditoria.estado === 'CERRADA';
   const traz = useTrazabilidad(id, !cerrada);
@@ -95,12 +95,17 @@ export function Revision({ id, datos, onSellada }: { id: number; datos: Auditori
     animar(acta.current.querySelectorAll('.pt-barra i'), { scaleY: [0, 1], duration: 400, ease: 'outBack', delay: stagger(30, { start: 300 }) });
   }, []);
 
-  // Al resolver una fila: su traza se cierra, la señal baja hasta la puerta y, al rato, la fila se va de «Pendientes»
-  const resuelta = useRef<number | null>(null);
-  const hecho = (idEv: number) => { resuelta.current = idEv; setAbierto(null); setRecientes(s => new Set(s).add(idEv)); };
+  // Al resolver una fila: su traza se cierra, la señal baja hasta la puerta y, al rato, la fila se va de «Pendientes».
+  // El formulario avisa cuando la recarga ya terminó, así que esto se dispara con su aviso (no con la llegada de los datos,
+  // que puede ocurrir antes o después según cómo React agrupe los renderizados) y lee la trazabilidad más reciente al final.
+  const [resuelta, setResuelta] = useState<{ id: number; n: number } | null>(null);
+  const trazActual = useRef(traz.data); trazActual.current = traz.data;
+  const relojes = useRef<number[]>([]);
+  useEffect(() => () => relojes.current.forEach(clearTimeout), []);
+  const hecho = (idEv: number, tipo: TipoAnomalia) => { setAbierto(x => (x && x.idEvaluacion === idEv && x.tipo === tipo ? null : x)); setRecientes(s => new Set(s).add(idEv)); setResuelta(r => ({ id: idEv, n: (r?.n ?? 0) + 1 })); };
   useEffect(() => {
-    const idEv = resuelta.current; if (idEv === null) return;
-    resuelta.current = null;
+    if (!resuelta) return;
+    const idEv = resuelta.id;
     const fila = tabla.current?.querySelector<HTMLElement>(`[data-id="${idEv}"]`), fin = fila?.querySelector('.ac-fin'), destino = acta.current?.querySelector('.rv-puerta .sello');
     if (fila && !prefersReducedMotion()) resorte(Array.from(fila.querySelectorAll('.ac-tz.s-si i, .ac-fin')), { scale: [0, 1.4, 1] }, { duration: 0.5, ease: [0.16, 1, 0.3, 1] });
     if (fin && destino && !prefersReducedMotion()) {
@@ -108,13 +113,14 @@ export function Revision({ id, datos, onSellada }: { id: number; datos: Auditori
       s.className = 'rv-senal'; document.body.appendChild(s);
       gsap.fromTo(s, { x: a.left, y: a.top }, { x: b.left + b.width / 2 - 5, y: b.top + b.height / 2 - 5, duration: 0.9, ease: CURVA.cambio, onComplete: () => { s.remove(); brincar(destino, 0.85); brincar(acta.current?.querySelector('.pt-t') ?? null, 0.96); } });
     }
-    const t = window.setTimeout(() => {
+    // Cada fila resuelta tiene su propio reloj: resolver otra enseguida no deja la anterior colgada en «Pendientes»
+    relojes.current.push(window.setTimeout(() => {
       anotar(); setRecientes(s => { const x = new Set(s); x.delete(idEv); return x; });
       // Con todo resuelto, la tabla pasa a «Todos»: se ven las trazas completas
-      if (traz.data && !traz.data.anomalias.length) setVista('todos');
-    }, 1400);
-    return () => clearTimeout(t);
-  }, [datos, traz.data]);
+      const d = trazActual.current;
+      if (d && !d.anomalias.length) setVista('todos');
+    }, 1400));
+  }, [resuelta]);
 
   const siguiente = () => {
     const a = anomalias[0]; if (!a) return;
@@ -124,7 +130,7 @@ export function Revision({ id, datos, onSellada }: { id: number; datos: Auditori
   };
 
   const cerrar = () => {
-    setConfirmando(false); setAbierto(null); setVista('todos');
+    setConfirmando(false); setAbierto(null); setVista('todos'); onCerrando(true);
     cambiar.mutate('CERRADA', {
       // Llega aquí con el detalle y la bitácora ya recargados (incluido el eslabón de cierre).
       // La línea fija las filas, el sello se completa y, al terminar, la hoja se archiva hacia arriba y aparece el acta.
@@ -135,7 +141,7 @@ export function Revision({ id, datos, onSellada }: { id: number; datos: Auditori
           gsap.to(acta.current, { y: -40, opacity: 0, duration: 0.5, delay: 0.5, ease: 'power3.in', onComplete: onSellada });
         });
       },
-      onError: () => { setReinicio(x => x + 1); void traz.refetch(); },
+      onError: () => { onCerrando(false); setReinicio(x => x + 1); void traz.refetch(); },
     });
   };
 
@@ -194,9 +200,9 @@ export function Revision({ id, datos, onSellada }: { id: number; datos: Auditori
                         <div className="rv-anom"><p>{a.mensaje}</p>{!esEste && <button className="btn sec min" type="button" onClick={() => setAbierto({ idEvaluacion: e.id, tipo: a.tipo, idHallazgo: a.id_hallazgo })}>{ANOMALIA[a.tipo].accion}</button>}</div>
                         {esEste && (
                           <div className="rv-form">
-                            {a.tipo === 'CP-06_DISONANCIA_PROBATORIA' && <FormEvidencia idAuditoria={id} idEvaluacion={e.id} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={hueco} />}
-                            {a.tipo === 'CONTROL_SIN_HALLAZGO' && <FormHallazgo idAuditoria={id} idEvaluacion={e.id} criterio={e.control.criterio_evaluacion} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={hueco} />}
-                            {a.tipo === 'CP-08_HALLAZGO_HUERFANO' && a.id_hallazgo !== undefined && <FormRecomendacion idAuditoria={id} idHallazgo={a.id_hallazgo} onHecho={() => hecho(e.id)} onCancelar={() => setAbierto(null)} destino={hueco} />}
+                            {a.tipo === 'CP-06_DISONANCIA_PROBATORIA' && <FormEvidencia idAuditoria={id} idEvaluacion={e.id} onHecho={() => hecho(e.id, a.tipo)} onCancelar={() => setAbierto(null)} destino={hueco} />}
+                            {a.tipo === 'CONTROL_SIN_HALLAZGO' && <FormHallazgo idAuditoria={id} idEvaluacion={e.id} criterio={e.control.criterio_evaluacion} onHecho={() => hecho(e.id, a.tipo)} onCancelar={() => setAbierto(null)} destino={hueco} />}
+                            {a.tipo === 'CP-08_HALLAZGO_HUERFANO' && a.id_hallazgo !== undefined && <FormRecomendacion idAuditoria={id} idHallazgo={a.id_hallazgo} onHecho={() => hecho(e.id, a.tipo)} onCancelar={() => setAbierto(null)} destino={hueco} />}
                           </div>
                         )}
                       </Fragment>

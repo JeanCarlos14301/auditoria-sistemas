@@ -79,7 +79,10 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
   // Recién creada, en cambio, sus piezas llegan desde donde se escribieron en «Nueva auditoría».
   const viaje = useRef(viajeReciente(loc.state));
   useLayoutEffect(() => {
-    if (viajar(raiz.current, viaje.current) && raiz.current) gsap.from(raiz.current.querySelectorAll('.cab-datos > :not(.alc)'), { opacity: 0, duration: 0.4, delay: 0.45, stagger: 0.08 });
+    const ctx = gsap.context(() => {
+      if (viajar(raiz.current, viaje.current) && raiz.current) gsap.from(raiz.current.querySelectorAll('.cab-datos > :not(.alc)'), { opacity: 0, duration: 0.4, delay: 0.45, stagger: 0.08 });
+    });
+    return () => ctx.revert();
   }, [a.id]);
   useEffect(() => {
     primera.current = false;

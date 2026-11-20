@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useSesion } from '../auth/AuthContext';
 import { CURVA, gsap } from '../motion/gsap';
@@ -18,6 +18,10 @@ export function Marco() {
   const control = useMemo<ControlMiga>(() => ({ poner: setMiga, nombreFuera: setFuera }), []);
   const regla = useRef<HTMLElement>(null);
   const enLista = loc.pathname === '/auditorias', enNueva = loc.pathname === '/auditorias/nueva';
+
+  // Cada pantalla empieza arriba: sin esto, la nueva heredaba el desplazamiento de la anterior (en el móvil, tras entrar,
+  // el índice aparecía ya bajado). Se hace antes de pintar para que no se vea el salto.
+  useLayoutEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
 
   // Al entrar en la aplicación, la regla de la barra se traza como la de la portada
   useEffect(() => {
