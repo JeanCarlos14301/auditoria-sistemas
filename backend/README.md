@@ -68,6 +68,8 @@ El seeder no se ejecuta con `NODE_ENV=production`. Para crear más administrador
 | `ORG_HMAC_SECRET` | Clave de la Hash Chain (≥ 32 caracteres, distinta de `JWT_SECRET`). **No cambiar con datos existentes** |
 | `CORS_ORIGIN` | Orígenes permitidos, separados por coma (`http://localhost:5173`) |
 | `BCRYPT_ROUNDS` | Coste de bcrypt (10–14) |
+| `TRUST_PROXY` | Proxies delante de la API: `0` en local, `1` en Vercel o Render (necesario para que el rate limit vea la IP real) |
+| `PG_POOL_MAX` | Conexiones a PostgreSQL por instancia: `10` en local, `3` en Vercel |
 | `SEED_DEFAULT_USERS`, `SEED_*_EMAIL`, `SEED_*_PASSWORD` | Usuarios de desarrollo. Las contraseñas van **entre comillas** (dotenv corta el valor en `#`) |
 | `QA_API_URL` | URL base usada por `npm run test:qa` |
 

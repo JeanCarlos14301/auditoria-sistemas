@@ -220,7 +220,11 @@ npm run dev                 # http://localhost:5173
 
 **Usuarios de desarrollo:** `admin@auditsys.co` y `auditor@auditsys.co`. Sus contraseñas están en `backend/.env` (`SEED_ADMIN_PASSWORD` y `SEED_AUDITOR_PASSWORD`).
 
-> **Producción:** cambie `JWT_SECRET`, `ORG_HMAC_SECRET` y las credenciales de la base de datos, desactive `SEED_DEFAULT_USERS` y sirva la aplicación detrás de HTTPS. `ORG_HMAC_SECRET` no debe cambiarse una vez existan auditorías: invalidaría todas las cadenas.
+### Despliegue en la nube
+
+Todo el sistema se despliega en **Vercel**: el frontend como sitio estático, la API Express como Vercel Function y PostgreSQL persistente de Neon, creado desde la pestaña *Storage* de Vercel. La guía paso a paso, con la alternativa Neon + Render + Vercel, está en **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
+
+> **Producción:** use secretos propios para `JWT_SECRET` y `ORG_HMAC_SECRET`, con `NODE_ENV=production` (desactiva los usuarios de desarrollo) y `TRUST_PROXY=1` detrás de un proxy. `ORG_HMAC_SECRET` no debe cambiarse una vez existan auditorías: invalidaría todas las cadenas.
 
 ## Calidad y pruebas
 
@@ -270,6 +274,7 @@ auditoria-sistemas/
 │       ├── motion/           Animación
 │       └── styles/           Tokens y estilos
 └── docs/
+    ├── DESPLIEGUE.md         Guía de despliegue en Vercel
     ├── EVIDENCIAS.md         Capturas por requisito
     └── capturas/             Capturas del sistema
 ```
@@ -296,6 +301,7 @@ El contrato completo, con tipos, ejemplos, errores y reglas, está en **[backend
 | [backend/API.md](backend/API.md) | Contrato de la API para el frontend |
 | [frontend/README.md](frontend/README.md) | Pantallas, reglas de interfaz, dirección de arte y movimiento |
 | [docs/EVIDENCIAS.md](docs/EVIDENCIAS.md) | Capturas del sistema organizadas por requisito |
+| [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md) | Despliegue en Vercel (API, frontend y PostgreSQL) paso a paso |
 
 ---
 

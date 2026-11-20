@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import { env } from './config/env.js';
 import { checkDatabaseConnection } from './db/pool.js';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 import { apiRateLimiter } from './middlewares/rateLimit.js';
@@ -12,7 +13,7 @@ export function createApp(): Express {
   const app = express();
 
   app.disable('x-powered-by');
-  app.set('trust proxy', false); // Ajustar al número de proxies si se despliega tras uno.
+  app.set('trust proxy', env.TRUST_PROXY); // 0 en local; 1 tras el proxy de Vercel/Render.
   app.set('etag', false);
   app.set('query parser', 'simple'); // Sin objetos anidados en query (evita contaminación de parámetros).
 

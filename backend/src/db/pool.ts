@@ -11,7 +11,7 @@ types.setTypeParser(1700, (value: string) => Number(value));
 
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,
-  max: 10,
+  max: env.PG_POOL_MAX,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 5_000,
   statement_timeout: 15_000,

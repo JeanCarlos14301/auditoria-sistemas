@@ -31,6 +31,12 @@ const EnvSchema = z.object({
     ),
   BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(14).default(12),
 
+  // Despliegue: número de proxies delante de la API (Vercel, Render, Nginx = 1). 0 en local.
+  // Sin esto, tras un proxy todos los clientes comparten IP y el rate limit los bloquea juntos.
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  // Conexiones máximas por instancia. En serverless (Vercel) conviene un valor bajo (p. ej. 3).
+  PG_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
+
   // Usuarios por defecto (solo desarrollo/QA). Sin contraseña definida, no se siembra ese usuario.
   SEED_DEFAULT_USERS: z
     .enum(['true', 'false'])
