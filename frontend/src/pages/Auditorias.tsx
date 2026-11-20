@@ -9,6 +9,7 @@ import { CountUp } from '../motion/CountUp';
 import { cascada, moverIndicador } from '../motion/efectos';
 import { CURVA, Flip, gsap } from '../motion/gsap';
 import { prefersReducedMotion } from '../motion/motion';
+import { useTitulo } from '../lib/titulo';
 
 type Filtro = 'TODAS' | EstadoAuditoria;
 type Orden = 'reciente' | 'pct' | 'az';
@@ -26,6 +27,7 @@ const ACCION: Record<EstadoAuditoria, [string, string]> = {
 const ORDENES: readonly [Orden, string][] = [['reciente', 'Más recientes'], ['pct', 'Mayor cumplimiento'], ['az', 'A–Z']];
 
 export default function Auditorias() {
+  useTitulo('Auditorías · AuditA');
   const q = useAuditorias();
   if (q.isPending) return <Cargando />;
   if (q.isError) return <ErrorPagina error={q.error} />;
@@ -150,7 +152,7 @@ function Fila({ a, busca }: { a: AuditoriaListado; busca: string }) {
             </Fragment>
           )}
         </span>
-        <span className="ls-acc">{accion}</span>
+        <span className="ls-acc">{accion}<span className="flecha" aria-hidden="true"><i /><svg viewBox="0 0 7 10"><path d="M1 1l4.5 4L1 9" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></span></span>
       </Link>
     </li>
   );

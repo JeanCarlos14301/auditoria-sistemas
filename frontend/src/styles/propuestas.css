@@ -2,7 +2,6 @@
 
 /* ── Rebobinar: en escritorio la sección se fija y el scroll es el tiempo ── */
 .rb-stage { grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: 20px 44px; align-items: center; }
-.rb.is-pinned .rb-stage { height: calc(100svh - var(--barra)); padding-block: 20px; }
 .rb-izq { display: grid; gap: 12px; min-width: 0; }
 .rb-num { font-family: var(--f-acc); font-weight: 500; font-size: clamp(3rem, 7vw, 4.4rem); line-height: 1; }
 .rb-num small { font-family: var(--f-text); font-size: 1rem; color: var(--muted); font-weight: 400; }

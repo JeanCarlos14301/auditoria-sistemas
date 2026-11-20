@@ -57,6 +57,8 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
 
   // La barra de documento dice dónde estamos
   useEffect(() => { miga.poner({ id: a.id, organizacion: a.organizacion, vista }); }, [miga, a.id, a.organizacion, vista]);
+  // La pestaña del navegador dice qué auditoría y qué vista
+  useEffect(() => { document.title = `${a.organizacion} · ${vista}`; }, [a.organizacion, vista]);
   useEffect(() => () => { miga.poner(null); miga.nombreFuera(false); }, [miga]);
   // Cuando el título grande sale de la pantalla, el nombre de la auditoría pasa a la barra
   useEffect(() => {
@@ -79,7 +81,10 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
   // Recién creada, en cambio, sus piezas llegan desde donde se escribieron en «Nueva auditoría».
   const viaje = useRef(viajeReciente(loc.state));
   useLayoutEffect(() => {
-    if (viajar(raiz.current, viaje.current) && raiz.current) gsap.from(raiz.current.querySelectorAll('.cab-datos > :not(.alc)'), { opacity: 0, duration: 0.4, delay: 0.45, stagger: 0.08 });
+    const ctx = gsap.context(() => {
+      if (viajar(raiz.current, viaje.current) && raiz.current) gsap.from(raiz.current.querySelectorAll('.cab-datos > :not(.alc)'), { opacity: 0, duration: 0.4, delay: 0.45, stagger: 0.08 });
+    });
+    return () => ctx.revert();
   }, [a.id]);
   useEffect(() => {
     primera.current = false;

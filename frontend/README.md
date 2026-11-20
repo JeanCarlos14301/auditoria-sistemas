@@ -38,12 +38,12 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 | `/auditorias/:id` en Borrador | **Alcance** (RF02, CP-03): el catálogo, con búsqueda por código, nombre o criterio y filtro por cláusula, y al lado la hoja de los elegidos con el contador de 10 a 15. Cada control marcado viaja como una ficha hasta su sitio; al quitarlo, cae. Al confirmar, los no elegidos se retiran y una línea fija los elegidos antes de abrir el trabajo |
 | `/auditorias/:id` | **Trabajo**: a la izquierda el índice de controles con sus nombres completos, agrupados por cláusula (con filtro «Por evaluar»); en el centro el control (criterio, ejemplo de evidencia, estado y lo que ese estado exige para poder cerrar, con la misma traza de la revisión) y sus evidencias, hallazgos y recomendaciones; a la derecha las métricas de la API, fijas. Al guardar ofrece el siguiente por evaluar. Debajo, la postura por atributo. En el móvil, una barra fija (anterior, este, siguiente) abre el índice a pantalla completa |
 | `/auditorias/:id/cierre` | **Revisión y cierre**: una sola tabla con la traza de cada control (evidencia, hallazgo, recomendación), agrupada por cláusula. Por defecto enseña solo lo pendiente: cada anomalía que informa la API va en su fila, con el formulario para resolverla ahí mismo; al guardar, la fila se completa y una señal baja a la puerta de cierre, fija abajo, que cuenta las trazas completas y se abre cuando la API dice que se puede cerrar. Al mantener pulsado, la platina recorre la tabla fijando cada fila y la vista pasa al acta. Ya cerrada, **el acta**: empieza por el resultado (cumplimiento sellado, veredicto de integridad, imprimir el informe y el sello en relieve) y sigue con los controles por cláusula, los hallazgos del más grave al menos y la postura por atributo, con un índice en el margen |
-| `/auditorias/:id/historia` | **Historia**: la bitácora se reproduce eslabón a eslabón |
+| `/auditorias/:id/historia` | **Historia**: se abre en el último eslabón, con el resultado a la vista; «Reproducir desde el principio» cuenta la bitácora eslabón a eslabón y el deslizador lleva a cualquier evento |
 | `/auditorias/:id/informe` | **Informe para imprimir** (RF08), solo con la auditoría cerrada: las hojas A4 tal como salen, con la huella del informe al pie de cada una |
 
 El panel (RF09) se cubre con las métricas de cada auditoría.
 
-Todas las pantallas comparten un **marco de documento**: la página es papel a todo el ancho, con una barra fija que dice dónde se está (Auditorías / n.º 7 · Organización / vista) y un pie. Las vistas de una auditoría cuelgan de una ruta contenedora (`src/pages/AuditoriaLayout.tsx`) que pinta una sola vez su cabecera (`src/components/CabeceraAuditoria.tsx`): organización, las cuatro fases con la fecha en que la bitácora registró cada una y las pestañas de las vistas que existen en su estado (Alcance · Trabajo, Revisión e Historia · Acta e Historia).
+Todas las pantallas comparten un **marco de documento**: la página es papel a todo el ancho, con una barra fija que dice dónde se está (Auditorías / n.º 7 · Organización / vista) y un pie. A la derecha de la barra, la cuenta solo enseña las iniciales y el rol; su panel (`src/components/Cuenta.tsx`) tiene el nombre, el correo, el tema (Sistema, Claro u Oscuro, que se recuerda en el navegador) y «Cerrar sesión». Las vistas de una auditoría cuelgan de una ruta contenedora (`src/pages/AuditoriaLayout.tsx`) que pinta una sola vez su cabecera (`src/components/CabeceraAuditoria.tsx`): organización, las cuatro fases con la fecha en que la bitácora registró cada una y las pestañas de las vistas que existen en su estado (Alcance · Trabajo, Revisión e Historia · Acta e Historia).
 
 ## Reglas que respeta el código
 
@@ -71,14 +71,15 @@ La herramienta termina convertida en documento. Mientras la auditoría está abi
 - En movimiento continuo solo cambian `transform` y `opacity`.
 - Dos curvas: entrada `cubic-bezier(.16,1,.3,1)` y cambio de estado `cubic-bezier(.66,0,.1,1)`.
 - Con `prefers-reduced-motion` no hay animaciones: se muestra el estado final.
-- En móvil no hay pin ni parallax: la historia de la auditoría se recorre con un control deslizante.
+- Mientras llegan datos, un tramo verde recorre la regla de la barra y la página se dibuja como hoja en blanco, con las líneas discontinuas del Borrador (`Cargando` en `src/components/estados-pagina.tsx`). Solo aparece si la espera se nota.
+- Si entrar tarda más de 3 s (la API del plan gratuito de Render se duerme tras un rato sin uso), la entrada lo explica en lugar de quedarse en «Entrando…».
 - Lo que está fuera de pantalla no se anima (el sello de la entrada y el relieve se pausan).
 
 Cada librería hace una cosa (`src/motion/gsap.ts`, `src/motion/efectos.ts`):
 
 | Librería | Para qué |
 |---|---|
-| GSAP | Recolocar filas (Flip), historia con pin y scrub (ScrollTrigger), texto por letras (SplitText), la llave del contador (DrawSVG), fichas que caen (Physics2D) |
+| GSAP | Recolocar filas (Flip), texto por letras (SplitText), la llave del contador (DrawSVG), fichas que caen (Physics2D) |
 | anime.js | Entradas escalonadas, también en rejilla desde el centro, y la altura de los trazos del relieve (objetos planos) |
 | Motion | Resortes con velocidad: sacudida de error, indicador de pestañas, vuelta del botón de sellar |
 | three.js | El sello en relieve de la entrada y del acta cerrada. 125 kB comprimidos en un trozo aparte que se descarga después de pintar la página: el formulario funciona desde el primer momento |
@@ -86,6 +87,8 @@ Cada librería hace una cosa (`src/motion/gsap.ts`, `src/motion/efectos.ts`):
 ### Impresión
 
 La vista del informe enseña en pantalla las mismas hojas que se imprimen: cada una mide 794 × 1123 px (A4 a 96 ppp) y se escala con `--s` para caber. `src/lib/paginar.ts` reparte los bloques en hojas a partir de sus alturas medidas (los títulos no se quedan solos y las cabeceras de tabla se repiten), y `src/styles/informe.css` trae la hoja de estilos de impresión: fuera la interfaz, una hoja por página y sin los márgenes del navegador. «Imprimir o guardar PDF» abre el diálogo del navegador.
+
+Cada pantalla pone su título en la pestaña del navegador (por ejemplo, «Universidad Tecnológica del Sur · Acta») y la app tiene su propio icono, la «A» dentro del aro del sello (`public/favicon.svg`), que cambia al verde claro en tema oscuro.
 
 `src/assets/bitacoraEjemplo.ts` es la bitácora (tipo de evento, hash y una frase en lenguaje claro) de una auditoría de prueba local: la usa el sello de la entrada, donde todavía no hay sesión.
 

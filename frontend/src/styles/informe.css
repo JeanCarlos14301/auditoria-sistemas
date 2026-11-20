@@ -170,7 +170,12 @@ body:has(.inf), body:has(.inf) .barra, body:has(.inf)::before { background: var(
 
 /* ── Impresión: fuera la interfaz; cada hoja, una página A4 sin los márgenes del navegador ── */
 @page informe { size: A4; margin: 0; }
+/* La cifra de la portada: animada en pantalla, fija en papel */
+.a4-cifra.en-papel { display: none; }
 @media print {
+  .a4-cifra.en-pantalla { display: none; }
+  .a4-cifra.en-papel { display: inline; }
+
   :root:has(.inf) { --p-papel: #FFFFFF; --p-relieve: #F1F3F4; --p-linea: #D2D7DB; }
   body:has(.inf) { background: #FFFFFF; }
   body:has(.inf) .barra, .inf-cab, .inf-barra, .inf-rail, .inf-lupa, .inf-medidor { display: none !important; }

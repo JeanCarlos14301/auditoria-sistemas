@@ -215,7 +215,11 @@ function Fila({ e, abierta, onAlternar }: { e: Evaluacion; abierta: boolean; onA
   const det = useRef<HTMLDivElement>(null), primera = useRef(true);
   useLayoutEffect(() => {
     if (primera.current) { primera.current = false; return; }
-    if (abierta) { setMontada(true); return; }
+    if (abierta) {
+      // Si aún se estaba plegando, se para el pliegue (su final la desmontaría) y vuelve a desplegarse
+      if (det.current) { gsap.killTweensOf(det.current); if (prefersReducedMotion()) gsap.set(det.current, { clearProps: 'height' }); else gsap.to(det.current, { height: 'auto', duration: 0.3, ease: 'power3.out', clearProps: 'height' }); }
+      setMontada(true); return;
+    }
     if (det.current && !prefersReducedMotion()) gsap.to(det.current, { height: 0, duration: 0.32, ease: 'power3.in', onComplete: () => setMontada(false) });
     else setMontada(false);
   }, [abierta]);

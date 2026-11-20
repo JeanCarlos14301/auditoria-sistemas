@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom';
 import type { ApiError } from '../api/client';
 
-export const Cargando = () => <p className="sub" role="status">Cargando…</p>;
+/** Mientras llegan los datos, la página se dibuja como una hoja en blanco: título, cifras y filas en borrador. */
+export const Cargando = () => (
+  <div className="esqueleto" role="status" aria-label="Cargando">
+    <span className="esq-tit" />
+    <span className="esq-cifras">{[0, 1, 2, 3].map(i => <i key={i} />)}</span>
+    {[0, 1, 2].map(k => <span className="esq-fila" key={k} style={{ '--k': k } as React.CSSProperties}><i /><i /></span>)}
+  </div>
+);
 
 /** 404 de la API: no existe o no pertenece al usuario (la API no distingue, a propósito). */
 export function ErrorPagina({ error }: { error: ApiError }) {

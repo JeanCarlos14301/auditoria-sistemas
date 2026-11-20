@@ -80,7 +80,7 @@ export function seccionesDe(informe: InformeSellado, v: VerificacionIntegridad):
         <div>
           <p className="a4-rot">Cumplimiento</p>
           {/* Cuenta hasta el valor sellado y termina exactamente en él */}
-          <p><CountUp className="a4-cifra num" valor={informe.cumplimiento_pct} desde={0} ms={1100} formato={pct} /></p>
+          <p>{/* Se imprime la cifra fija: la cuenta animada podría estar a medias si se imprime al abrir */}<CountUp className="a4-cifra num en-pantalla" valor={informe.cumplimiento_pct} desde={0} ms={1100} formato={pct} /><span className="a4-cifra num en-papel">{pct(informe.cumplimiento_pct)}</span></p>
           <p className="num">{plural(informe.total_implementados, 'control implementado', 'controles implementados')} de {plural(informe.total_aplicables, 'aplicable', 'aplicables')}</p>
           <div className="a4-unidades" aria-hidden="true">{evals.map(e => <Marca key={e.id} v={e.estado} />)}</div>
           <ul className="a4-dist num">

@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <title>AuditA</title>
+    <meta name="description" content="AuditA: gestión de auditorías de seguridad de la información según ISO/IEC 27002:2022 e ISO 19011:2018." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141917" media="(prefers-color-scheme: dark)" />
+    <script>
+      // El tema elegido en «Tu cuenta» se pone antes de pintar, para que no destelle el otro (ver src/lib/tema.ts)
+      try { var t = localStorage.getItem('audita.tema'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
