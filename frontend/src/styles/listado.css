@@ -47,9 +47,12 @@
 .ls.visto .ls-pct .linea i { transform: scaleX(var(--v)); }
 /* El siguiente paso: la línea se alarga al pasar por la fila */
 .ls-acc { justify-self: end; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14.5px; white-space: nowrap; }
-.ls-acc::after { content: ""; width: 14px; height: 1.5px; background: currentColor; transform: scaleX(.5); transform-origin: 0 50%; transition: transform var(--d-state) var(--e-st); }
-.ls-a:hover .ls-acc { color: var(--accent); }
-.ls-a:hover .ls-acc::after { transform: scaleX(1); }
+/* La flecha: un trazo y su punta; el trazo se alarga al pasar por la fila o al llegar con el teclado */
+.flecha { display: inline-flex; align-items: center; }
+.flecha i { display: block; width: 10px; height: 1.5px; background: currentColor; transition: width var(--d-move) var(--e-in); }
+.flecha svg { width: 7px; height: 10px; margin-left: -6px; }
+.ls-a:hover .ls-acc, .ls-a:focus-visible .ls-acc { color: var(--accent); }
+.ls-a:hover .flecha i, .ls-a:focus-visible .flecha i { width: 22px; }
 .ls-vacio { padding: 26px 0; color: var(--muted); font-size: 15px; }
 
 @media (max-width: 860px) {

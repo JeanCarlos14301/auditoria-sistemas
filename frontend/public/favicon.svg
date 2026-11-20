@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- AuditA: la «A» dentro del aro del sello. En tema oscuro, el verde claro de la app. -->
+  <style>.t { stroke: #0F5B48; } @media (prefers-color-scheme: dark) { .t { stroke: #62C7A8; } }</style>
+  <circle class="t" cx="16" cy="16" r="14" fill="none" stroke-width="2"/>
+  <path class="t" d="M9.6 23.2 16 8.4l6.4 14.8M11.9 18h8.2" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

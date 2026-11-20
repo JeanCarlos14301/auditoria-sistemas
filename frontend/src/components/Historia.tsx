@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useMemo, useRef } from 'react';
 import { animate as animar, splitText, stagger, type JSAnimation } from 'animejs';
 import type { Eslabon } from '../api/types';
 import { ESTADOS_AUDITORIA, NOMBRE_ESTADO, pct } from '../lib/format';
 import { fraseDe, reproducir, trazaEnElTiempo } from '../lib/historia';
 import { tramosVivos, trazaCompleta } from '../lib/traza';
-import { ScrollTrigger } from '../motion/gsap';
-import { isNarrow, prefersReducedMotion } from '../motion/motion';
+import { prefersReducedMotion } from '../motion/motion';
 import { crearSello } from './selloImperativo';
 
 interface Props {
@@ -19,8 +18,8 @@ interface Props {
 
 /**
  * Rebobinar la auditoría: la bitácora se reproduce evento a evento.
- * En escritorio la sección se fija y el scroll es el tiempo (ScrollTrigger con pin y scrub): al bajar avanza
- * y al subir se deshace. En móvil o con movimiento reducido no hay pin: se maneja con el deslizador.
+ * Se abre terminada, en el último eslabón, con el resultado a la vista. «Reproducir desde el principio» la cuenta
+ * de nuevo y el deslizador lleva a cualquier evento.
  *
  * El estado en cada evento sale del contenido de los eslabones (lib/historia.ts), no de cálculos propios.
  * Por rendimiento, mientras se pasa de un evento a otro se cambian clases directamente, sin volver a pintar con React.
@@ -31,16 +30,17 @@ export function Historia({ eslabones, nombres, titulo, cifra, orla }: Props) {
   const N = eslabones.length;
   const codigos = useMemo(() => Object.keys(instantaneas[N]?.controles ?? {}), [instantaneas, N]);
 
-  useEffect(() => {
+  // Antes de pintar, para que se vea ya terminada y no destelle el evento 0
+  useLayoutEffect(() => {
     const el = raiz.current;
     if (!el || !N) return;
     const q = <T extends Element>(s: string) => el.querySelector<T>(s)!;
-    const escenario = q<HTMLElement>('.rb-stage'), tit = q<HTMLElement>('.rb-tit'), meta = q<HTMLElement>('.rb-meta'), numero = q<HTMLElement>('.rb-k');
+    const tit = q<HTMLElement>('.rb-tit'), meta = q<HTMLElement>('.rb-meta'), numero = q<HTMLElement>('.rb-k');
     const rango = q<HTMLInputElement>('.rb-rango'), play = q<HTMLButtonElement>('.rb-play'), inicio = q<HTMLButtonElement>('.rb-ini'), estados = q<HTMLElement>('.estados');
     const filas = Object.fromEntries(Array.from(el.querySelectorAll<HTMLElement>('.rb-fila')).map(f => [f.dataset.c!, f]));
     const sello = crearSello(q<HTMLElement>('.rb-sello'), eslabones.map(e => e.tipo_evento));
     sello.textos(cifra, orla);
-    let k = -1, ultimo = 0, trig: ScrollTrigger | null = null, repro: JSAnimation | null = null;
+    let k = -1, ultimo = 0, repro: JSAnimation | null = null;
 
     function poner(valor: number) {
       const nk = Math.max(0, Math.min(N, Math.round(valor)));
@@ -64,44 +64,25 @@ export function Historia({ eslabones, nombres, titulo, cifra, orla }: Props) {
         f.querySelectorAll<HTMLElement>('.tramo').forEach((t, i) => { t.dataset.n = traza[i]!; t.classList.toggle('on', !!d && d.estado !== null && vivos[i]!); });
       }
       sello.hasta(nk); sello.forma(e ? e.hash_actual : null, 170); sello.sellar(nk === N, avanza);
+      if (!repro) play.textContent = nk >= N ? 'Reproducir desde el principio' : nk === 0 ? 'Reproducir' : 'Seguir';
     }
-    // Con pin, el scroll es el tiempo; sin pin, el deslizador
-    const ir = (v: number) => { if (trig) window.scrollTo(0, trig.start + (trig.end - trig.start) * (v / N)); else poner(v); };
-    const parar = () => { repro?.pause(); repro = null; play.textContent = 'Reproducir'; };
-    function montar() {
-      parar(); trig?.kill(true); trig = null; el!.classList.remove('is-pinned');
-      if (prefersReducedMotion()) { k = -1; poner(N); return; }   // estado final, sin pin
-      if (!isNarrow() && window.innerHeight >= 660) {
-        el!.classList.add('is-pinned');
-        const barra = document.querySelector<HTMLElement>('.barra');
-        trig = ScrollTrigger.create({ trigger: escenario, pin: true, start: () => `top ${barra?.offsetHeight ?? 0}px`, end: () => `+=${N * 70}`, scrub: 0.35, anticipatePin: 1, invalidateOnRefresh: true, onUpdate: self => poner(self.progress * N) });
-        k = -1; poner(trig.progress * N);
-      } else { k = -1; poner(N); }   // en móvil se abre en el final y se rebobina con el deslizador
-    }
-    const alDeslizar = () => { parar(); ir(Number(rango.value)); };
+    const parar = () => { repro?.pause(); repro = null; const nk = k; k = -1; poner(nk); };
+    const alDeslizar = () => { if (repro) { repro.pause(); repro = null; } poner(Number(rango.value)); };
+    // Reproducir: desde el principio si está terminada; si se pausó a medias, sigue desde ahí
     const alReproducir = () => {
       if (repro) { parar(); return; }
       if (prefersReducedMotion()) { poner(N); return; }
-      const o = { v: k >= N ? 0 : k }; if (k >= N) ir(0);
+      const o = { v: k >= N ? 0 : k }; if (k >= N) poner(0);
       play.textContent = 'Pausar';
-      repro = animar(o, { v: N, duration: (N - o.v) * 260, ease: 'linear', onUpdate: () => ir(o.v), onComplete: () => { repro = null; play.textContent = 'Reproducir'; } });
+      repro = animar(o, { v: N, duration: (N - o.v) * 220, ease: 'linear', onUpdate: () => poner(o.v), onComplete: () => { repro = null; k = -1; poner(N); } });
     };
-    const alInicio = () => { parar(); ir(0); };
+    const alInicio = () => { if (repro) { repro.pause(); repro = null; } poner(0); };
     rango.addEventListener('input', alDeslizar); play.addEventListener('click', alReproducir); inicio.addEventListener('click', alInicio);
-
-    const mq = matchMedia('(prefers-reduced-motion: reduce)');
-    let eraEstrecho = isNarrow(), tR = 0, tRefresco = 0;
-    const alRedimensionar = () => { clearTimeout(tR); tR = window.setTimeout(() => { if (isNarrow() !== eraEstrecho) { eraEstrecho = isNarrow(); montar(); } }, 200); };
-    window.addEventListener('resize', alRedimensionar); mq.addEventListener('change', montar);
-    // Si cambia la altura de lo que hay encima (se carga el relieve, se abre algo), se recalcula dónde empieza el pin
-    const ro = new ResizeObserver(() => { clearTimeout(tRefresco); tRefresco = window.setTimeout(() => { if (trig) ScrollTrigger.refresh(); }, 200); });
-    if (el.parentElement) ro.observe(el.parentElement);
-    montar();
+    poner(N);
     return () => {
-      clearTimeout(tR); clearTimeout(tRefresco); parar(); trig?.kill(true); ro.disconnect();
-      window.removeEventListener('resize', alRedimensionar); mq.removeEventListener('change', montar);
+      repro?.pause(); repro = null;
       rango.removeEventListener('input', alDeslizar); play.removeEventListener('click', alReproducir); inicio.removeEventListener('click', alInicio);
-      sello.destruir(); el.classList.remove('is-pinned');
+      sello.destruir();
     };
   }, [eslabones, instantaneas, codigos, N, cifra, orla]);
 
@@ -111,13 +92,13 @@ export function Historia({ eslabones, nombres, titulo, cifra, orla }: Props) {
       <div className="hoja rb-stage">
         <div className="rb-izq">
           <p className="sub num">{titulo}</p>
-          <p className="rb-num num"><span className="rb-k">0</span><small> de {N}</small></p>
+          <p className="rb-num num"><span className="rb-k">{N}</span><small> de {N}</small></p>
           <p className="rb-tit" aria-live="polite" />
           <p className="rb-meta sub hash num" />
           <div className="estados" data-sin=""><ol>{ESTADOS_AUDITORIA.map(e => <li key={e}>{NOMBRE_ESTADO[e]}</li>)}</ol><span className="estados-marca" /></div>
           <div className="rb-ctrl">
-            <input className="rb-rango" type="range" min={0} max={N} step={1} defaultValue={0} aria-label="Evento de la auditoría" />
-            <div className="fila-acc"><button className="btn sec min rb-play" type="button">Reproducir</button><button className="enlace rb-ini" type="button">Volver al principio</button></div>
+            <input className="rb-rango" type="range" min={0} max={N} step={1} defaultValue={N} aria-label="Evento de la auditoría" />
+            <div className="fila-acc"><button className="btn sec min rb-play" type="button">Reproducir desde el principio</button><button className="enlace rb-ini" type="button">Volver al principio</button></div>
           </div>
           <div className="rb-sello" />
         </div>

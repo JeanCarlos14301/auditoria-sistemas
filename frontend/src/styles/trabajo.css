@@ -39,8 +39,11 @@
 .tr-det { display: grid; gap: 30px; }
 .tr-det > * { min-width: 0; }
 .td-cab h2 { font: 500 clamp(1.75rem, 2.5vw, 2.3rem)/1.1 var(--f-acc); letter-spacing: -.012em; margin-top: 8px; max-width: 28ch; }
-.td-attr { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 12px; font-size: 13.5px; color: var(--muted); }
-.td-attr b { font-weight: 500; color: var(--ink); }
+/* Los cuatro atributos ISO del control, en ficha: cada uno con su rótulo */
+.td-ficha { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 14px 0 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); max-width: 760px; }
+.td-ficha div { display: grid; gap: 3px; align-content: start; padding: 10px 14px 11px 0; font-size: 14px; min-width: 0; }
+.td-ficha div + div { padding-left: 14px; border-left: 1px solid var(--line); }
+.td-ficha dd { margin: 0; }
 .td-crit { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 18px 36px; padding-top: 18px; border-top: 1px solid var(--line); }
 .td-crit .crit { font-size: 16.5px; line-height: 1.55; margin-top: 8px; }
 .td-crit .ej { font-size: 14px; line-height: 1.5; color: var(--muted); margin-top: 8px; }
@@ -168,6 +171,9 @@
   .tt.s-falta::before { border-left-color: var(--line); }
   .tt:last-child::before { display: none; }
   .tt i { top: 2px; }
+  .td-ficha { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .td-ficha div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .td-ficha div:nth-child(n+3) { border-top: 1px solid var(--line); }
   .hz dl { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .hz dd { margin-bottom: 6px; }
 }

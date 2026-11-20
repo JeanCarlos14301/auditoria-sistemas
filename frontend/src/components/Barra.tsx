@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useIsFetching } from '@tanstack/react-query';
 import { useSesion } from '../auth/AuthContext';
 import { Cuenta } from './Cuenta';
 import { CURVA, gsap } from '../motion/gsap';
@@ -20,6 +21,15 @@ export function Marco() {
   const regla = useRef<HTMLElement>(null);
   const enLista = loc.pathname === '/auditorias', enNueva = loc.pathname === '/auditorias/nueva';
 
+  // Mientras llegan datos, la regla de la barra corre en verde. Solo si tarda: una consulta rápida no hace parpadear nada.
+  const trayendo = useIsFetching() > 0;
+  const [cargando, setCargando] = useState(false);
+  useEffect(() => {
+    if (!trayendo) { setCargando(false); return; }
+    const t = setTimeout(() => setCargando(true), 250);
+    return () => clearTimeout(t);
+  }, [trayendo]);
+
   // Cada pantalla empieza arriba: sin esto, la nueva heredaba el desplazamiento de la anterior (en el móvil, tras entrar,
   // el índice aparecía ya bajado). Se hace antes de pintar para que no se vea el salto.
   useLayoutEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
@@ -31,7 +41,7 @@ export function Marco() {
 
   return (
     <MigaContext.Provider value={control}>
-      <header className={`barra${miga && fuera ? ' con-nombre' : ''}`}>
+      <header className={`barra${miga && fuera ? ' con-nombre' : ''}${cargando ? ' cargando' : ''}`} aria-busy={cargando || undefined}>
         <div className="marco">
           <div className="barra-in">
             <Link className="logo" to="/auditorias">AuditA</Link>

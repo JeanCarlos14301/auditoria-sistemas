@@ -317,7 +317,7 @@ function Detalle({ idAuditoria, ev, siguiente, ultimoPendiente, onIr, onGuardado
       <header className="td-cab">
         <p className="rot num">Control {c.codigo_iso} · Cláusula {c.clausula} · {c.categoria_tema}</p>
         <h2>{c.nombre}</h2>
-        <p className="td-attr"><span>Tipo <b>{c.attr_tipo_control}</b></span><span>Propiedades <b>{c.attr_propiedades_cia}</b></span><span>NIST <b>{c.attr_concepto_nist}</b></span><span>Dominio <b>{c.attr_dominio_seguridad}</b></span></p>
+        <dl className="td-ficha">{[['Tipo', c.attr_tipo_control], ['Propiedades', c.attr_propiedades_cia], ['NIST', c.attr_concepto_nist], ['Dominio', c.attr_dominio_seguridad]].map(([k, v]) => <div key={k}><dt className="rot">{k}</dt><dd>{v}</dd></div>)}</dl>
       </header>
       <section className="td-crit">
         <div><h3 className="rot">Criterio de evaluación</h3><p className="crit">{c.criterio_evaluacion}</p></div>

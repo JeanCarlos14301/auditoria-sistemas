@@ -8,6 +8,7 @@ import { ESTADOS_AUDITORIA, NOMBRE_ESTADO, fecha, plural } from '../lib/format';
 import { brincar, cascada, moverIndicador, sacudir } from '../motion/efectos';
 import { prefersReducedMotion } from '../motion/motion';
 import { medirViaje } from '../motion/viaje';
+import { useTitulo } from '../lib/titulo';
 
 type Campo = 'organizacion' | 'alcance' | 'fecha_inicio' | 'fecha_fin';
 type Errores = Partial<Record<Campo, string>>;
@@ -20,6 +21,7 @@ const MSG_INVERTIDAS = 'La fecha de fin no puede ser anterior a la de inicio.';
  * en la caché, la hoja pasa al alcance: el título, el alcance, las fases y las pestañas viajan hasta la cabecera.
  */
 export default function NuevaAuditoria() {
+  useTitulo('Nueva auditoría · AuditA');
   const ir = useNavigate();
   const sesion = useSesion();
   const m = useCrearAuditoria();

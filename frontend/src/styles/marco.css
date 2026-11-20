@@ -11,6 +11,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .barra { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: var(--surface); border-bottom: 0; }
 .barra-in { display: flex; align-items: center; gap: 10px 22px; min-height: var(--barra); }
 .barra .logo { flex: none; text-decoration: none; }
+/* Mientras llegan datos, un tramo verde recorre la regla de la barra */
+.barra .regla { position: relative; overflow: hidden; }
+.barra .regla::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 22%; background: var(--accent); transform: translateX(-100%); opacity: 0; transition: opacity 200ms linear; }
+.barra.cargando .regla::after { opacity: 1; animation: regla-corre 1.15s var(--e-st) infinite; }
+@keyframes regla-corre { to { transform: translateX(470%); } }
 .miga { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1; font-size: 14px; color: var(--muted); }
 .miga a { color: var(--muted); text-decoration: none; }
 .miga a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }

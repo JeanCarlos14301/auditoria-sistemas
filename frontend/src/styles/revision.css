@@ -51,6 +51,8 @@
 .pt-acc { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
 .pt-acc .btn { padding: 11px 18px; }
 .pt-sello .sello { width: 76px; }
+/* En reposo no se ve (parecía una rueda de carga): aparece al mantener pulsado y queda durante el cierre */
+.pt-sello { --vis: clamp(0, calc(max(var(--h), var(--p)) * 8), 1); opacity: var(--vis); transform: scale(calc(.82 + .18 * var(--vis))); transition: opacity 160ms linear; }
 /* La señal que baja de la fila resuelta a la puerta */
 .rv-senal { position: fixed; left: 0; top: 0; z-index: 70; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); pointer-events: none; }
 

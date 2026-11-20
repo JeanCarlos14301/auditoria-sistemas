@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { BITACORA_EJEMPLO, SELLO_EJEMPLO } from '../assets/bitacoraEjemplo';
 import { useSesion } from '../auth/AuthContext';
+import { useTitulo } from '../lib/titulo';
 import { Campo, MensajeError } from '../components/basicos';
 import { SelloRelieve, type ControlRelieve } from '../components/SelloRelieve';
 import { crearSello } from '../components/selloImperativo';
@@ -45,6 +46,14 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false);
   /** Sesión iniciada: el sello se estampa antes de pasar a la aplicación. */
   const [sellando, setSellando] = useState(false);
+  // En el plan gratuito, la API se duerme tras un rato sin uso: si la entrada tarda, se explica por qué
+  const [lenta, setLenta] = useState(false);
+  useEffect(() => {
+    if (!enviando) { setLenta(false); return; }
+    const t = setTimeout(() => setLenta(true), 3000);
+    return () => clearTimeout(t);
+  }, [enviando]);
+  useTitulo('Entrar · AuditA');
   const pantalla = useRef<HTMLElement>(null), form = useRef<HTMLFormElement>(null), marca = useRef<HTMLHeadingElement>(null);
   const relieve = useRef<ControlRelieve>(null), plano = useRef<HTMLDivElement>(null), raya = useRef<HTMLSpanElement>(null);
   const pieK = useRef<HTMLElement>(null), pieF = useRef<HTMLSpanElement>(null), narracion = useRef<JSAnimation | null>(null);
@@ -131,6 +140,7 @@ export default function Login() {
             <Campo id="login-pass" etiqueta="Contraseña"><span className="linea"><input className="campo" id="login-pass" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} aria-invalid={error ? true : undefined} /></span></Campo>
             {error && <MensajeError>{error}</MensajeError>}
             <button className="btn" type="submit" disabled={enviando}>{estado.fase === 'activa' ? 'Sesión iniciada' : enviando ? 'Entrando…' : 'Entrar'}</button>
+            {lenta && enviando && <p className="entrada-lenta" role="status">El servidor se está despertando. La primera entrada después de un rato tarda hasta un minuto.<span className="barrita" aria-hidden="true"><i /></span></p>}
           </form>
           <p className="entrada-nota">No hay registro abierto: las cuentas las crea un administrador.</p>
         </div>

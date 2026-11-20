@@ -57,6 +57,8 @@ export function CabeceraAuditoria({ datos }: { datos: AuditoriaDetalle }) {
 
   // La barra de documento dice dónde estamos
   useEffect(() => { miga.poner({ id: a.id, organizacion: a.organizacion, vista }); }, [miga, a.id, a.organizacion, vista]);
+  // La pestaña del navegador dice qué auditoría y qué vista
+  useEffect(() => { document.title = `${a.organizacion} · ${vista}`; }, [a.organizacion, vista]);
   useEffect(() => () => { miga.poner(null); miga.nombreFuera(false); }, [miga]);
   // Cuando el título grande sale de la pantalla, el nombre de la auditoría pasa a la barra
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { onSesionPerdida, tokenStore } from '../api/client';
 import * as ep from '../api/endpoints';
 import type { Usuario } from '../api/types';
+import { Cargando } from '../components/estados-pagina';
 
 type Estado = { fase: 'cargando' } | { fase: 'anonima' } | { fase: 'activa'; usuario: Usuario };
 interface Sesion { estado: Estado; entrar: (email: string, password: string) => Promise<void>; salir: () => void }
@@ -47,7 +48,8 @@ export function useSesion(): Sesion {
 export function RutaPrivada() {
   const { estado } = useSesion();
   const loc = useLocation();
-  if (estado.fase === 'cargando') return <p className="wrap sub" style={{ paddingBlock: 48 }}>Recuperando la sesión…</p>;
+  // Mientras se recupera la sesión al recargar, la misma hoja en blanco que en cualquier otra espera
+  if (estado.fase === 'cargando') return <div className="marco"><Cargando /></div>;
   if (estado.fase === 'anonima') return <Navigate to="/login" replace state={{ desde: loc.pathname }} />;
   return <Outlet />;
 }

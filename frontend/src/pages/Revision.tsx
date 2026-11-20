@@ -106,7 +106,7 @@ export function Revision({ id, datos, onCerrando, onSellada }: { id: number; dat
   useEffect(() => {
     if (!resuelta) return;
     const idEv = resuelta.id;
-    const fila = tabla.current?.querySelector<HTMLElement>(`[data-id="${idEv}"]`), fin = fila?.querySelector('.ac-fin'), destino = acta.current?.querySelector('.rv-puerta .sello');
+    const fila = tabla.current?.querySelector<HTMLElement>(`[data-id="${idEv}"]`), fin = fila?.querySelector('.ac-fin'), destino = acta.current?.querySelector('.rv-puerta .pt-t > b');
     if (fila && !prefersReducedMotion()) resorte(Array.from(fila.querySelectorAll('.ac-tz.s-si i, .ac-fin')), { scale: [0, 1.4, 1] }, { duration: 0.5, ease: [0.16, 1, 0.3, 1] });
     if (fin && destino && !prefersReducedMotion()) {
       const a = fin.getBoundingClientRect(), b = destino.getBoundingClientRect(), s = document.createElement('i');
