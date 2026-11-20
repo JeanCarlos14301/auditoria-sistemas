@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useSesion } from '../auth/AuthContext';
+import { Cuenta } from './Cuenta';
 import { CURVA, gsap } from '../motion/gsap';
 import { prefersReducedMotion } from '../motion/motion';
 import { MigaContext, type ControlMiga, type Miga } from './Miga';
@@ -45,12 +46,7 @@ export function Marco() {
               )}
               {enNueva && <><span className="sep sep-vista" aria-hidden="true">/</span><span className="miga-vista" aria-current="page">Nueva auditoría</span></>}
             </nav>
-            {estado.fase === 'activa' && (
-              <div className="barra-usuario">
-                <span className="sub">{estado.usuario.nombre}</span>
-                <button className="enlace" type="button" onClick={salir}>Salir</button>
-              </div>
-            )}
+            {estado.fase === 'activa' && <Cuenta usuario={estado.usuario} onSalir={salir} />}
           </div>
           <i className="regla" ref={regla} aria-hidden="true" />
         </div>

@@ -43,7 +43,7 @@ El puerto es fijo (`5173`) porque el backend solo acepta ese origen (`CORS_ORIGI
 
 El panel (RF09) se cubre con las métricas de cada auditoría.
 
-Todas las pantallas comparten un **marco de documento**: la página es papel a todo el ancho, con una barra fija que dice dónde se está (Auditorías / n.º 7 · Organización / vista) y un pie. Las vistas de una auditoría cuelgan de una ruta contenedora (`src/pages/AuditoriaLayout.tsx`) que pinta una sola vez su cabecera (`src/components/CabeceraAuditoria.tsx`): organización, las cuatro fases con la fecha en que la bitácora registró cada una y las pestañas de las vistas que existen en su estado (Alcance · Trabajo, Revisión e Historia · Acta e Historia).
+Todas las pantallas comparten un **marco de documento**: la página es papel a todo el ancho, con una barra fija que dice dónde se está (Auditorías / n.º 7 · Organización / vista) y un pie. A la derecha de la barra, la cuenta solo enseña las iniciales y el rol; su panel (`src/components/Cuenta.tsx`) tiene el nombre, el correo, el tema (Sistema, Claro u Oscuro, que se recuerda en el navegador) y «Cerrar sesión». Las vistas de una auditoría cuelgan de una ruta contenedora (`src/pages/AuditoriaLayout.tsx`) que pinta una sola vez su cabecera (`src/components/CabeceraAuditoria.tsx`): organización, las cuatro fases con la fecha en que la bitácora registró cada una y las pestañas de las vistas que existen en su estado (Alcance · Trabajo, Revisión e Historia · Acta e Historia).
 
 ## Reglas que respeta el código
 
