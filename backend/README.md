@@ -52,6 +52,7 @@ El seeder no se ejecuta con `NODE_ENV=production`. Para crear más administrador
 | `npm run demo:seed` | Crea auditorías de ejemplo a través de la API (API levantada; no en producción; se puede repetir sin duplicar) |
 | `npm run db:up` / `db:down` | Levanta / detiene PostgreSQL |
 | `npm run db:reset` | **Borra todos los datos** y vuelve a ejecutar `sql/init_auditsys.sql` |
+| `npm run db:init` | Ejecuta `sql/init_auditsys.sql` contra `DATABASE_URL` (bases en la nube como Neon). No hace nada si el esquema ya existe |
 | `npm run admin:create` | Crea un administrador |
 | `npm run chain:verify -- <id>` | Verificación forense de la cadena de una auditoría (exit 2 si hay ruptura) |
 
@@ -107,7 +108,7 @@ src/
     control.service.ts     Catálogo ISO/IEC 27002:2022
   routes/                  auditorias, ejecucion, controles
   modules/auth/            Login y gestión de usuarios
-  scripts/                 run-qa-tests, createAdmin, verifyChain
+  scripts/                 run-qa-tests, createAdmin, verifyChain, initDb, demoSeed
 sql/init_auditsys.sql      DDL (9 tablas), triggers de inmutabilidad y seeder de 14 controles
 ```
 

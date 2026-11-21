@@ -16,14 +16,35 @@ Planificación, ejecución y cierre de auditorías basadas en **ISO/IEC 27002:20
 ![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white)
 ![QA](https://img.shields.io/badge/QA-CP--01%E2%80%A6CP--13%20aprobado-2E7D32)
 
+**[Probar la demo en línea →](https://auditoria-sistemas-brown.vercel.app)**
+
 <img src="docs/capturas/03b-dashboard-resultado-cerrada.png" alt="Acta de una auditoría cerrada en AuditA" width="900">
 
 </div>
 
 ---
 
+## Demo en línea
+
+| | URL |
+|---|---|
+| Aplicación | https://auditoria-sistemas-brown.vercel.app |
+| API | https://audita-api.vercel.app/api ([estado](https://audita-api.vercel.app/api/health)) |
+
+**Cuentas de prueba** (rol auditor; cada auditor solo ve sus propias auditorías):
+
+| Cuenta | Contraseña | Qué encontrará |
+|---|---|---|
+| `auditor@auditsys.co` | `Auditor.Demo#2026` | Seis auditorías de ejemplo, una en cada etapa: borrador, en ejecución, en revisión con anomalías, lista para cerrar y dos cerradas con su informe |
+| `invitado@auditsys.co` | `Invitado.Demo#2026` | Cuenta vacía, para recorrer el flujo completo desde «Nueva auditoría» |
+
+> Demo de un proyecto académico: los datos son ficticios y compartidos entre todas las personas que usan la misma cuenta. Las auditorías cerradas son inmutables, así que lo que se cierre queda así. La primera petición puede tardar unos segundos (arranque en frío).
+
+---
+
 ## Tabla de contenido
 
+0. [Demo en línea](#demo-en-línea)
 1. [Descripción](#descripción)
 2. [Funcionalidades](#funcionalidades)
 3. [Capturas](#capturas)
@@ -238,7 +259,7 @@ flowchart LR
 |---|---|---|
 | `audita-api` | `backend` | [`backend/vercel.json`](backend/vercel.json): compila con `tsc` y atiende todas las rutas con [`api/index.js`](backend/api/index.js) |
 | `audita-web` | `frontend` | [`frontend/vercel.json`](frontend/vercel.json): preset Vite y rewrite a `index.html` para las rutas de la SPA |
-| Base de datos | — | Neon (Postgres) desde *Storage*. El esquema se crea una vez con `sql/init_auditsys.sql` |
+| Base de datos | — | Neon (Postgres) desde *Storage*. El esquema se crea una vez con `npm run db:init` (ejecuta `sql/init_auditsys.sql`) |
 
 **Variables de producción de la API**
 

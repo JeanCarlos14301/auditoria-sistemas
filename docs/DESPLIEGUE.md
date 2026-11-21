@@ -41,11 +41,16 @@ Navegador ──► audita-web.vercel.app        (React, estático)
 2. Copie la cadena de conexión **directa**: la que **no** contiene `-pooler` en el host. Está en *Storage → la base → .env.local* (`DATABASE_URL_UNPOOLED`). Si la variable `DATABASE_URL` del proyecto apunta al host con `-pooler`, reemplace su valor por la cadena directa.
 3. Desde su PC, cree las tablas y el catálogo de controles. Es un solo paso:
 
-   ```bash
-   psql "<CADENA_DIRECTA_DE_NEON>" -f backend/sql/init_auditsys.sql
+   ```powershell
+   cd backend
+   npm install
+   $env:DATABASE_URL="<CADENA_DIRECTA_DE_NEON>"
+   npm run db:init
    ```
 
-   Si no tiene `psql`, pegue el contenido de `backend/sql/init_auditsys.sql` en el **SQL Editor** de la consola de Neon (*Storage → Open in Neon*) y ejecútelo.
+   Debe responder `Esquema creado. Controles ISO 27002 cargados: 14`. Si el esquema ya existe, no hace nada. En bash: `DATABASE_URL="..." npm run db:init`.
+
+   > El editor **Query** de Vercel no sirve para esto: ejecuta una sola sentencia por vez («cannot insert multiple commands into a prepared statement»). Como alternativa a `db:init`, use el **SQL Editor** de la consola de Neon (*Open in Neon*) o `psql "<cadena>" -f backend/sql/init_auditsys.sql`.
 
 ## Paso 3 · Variables de entorno de la API
 
@@ -57,7 +62,7 @@ En **audita-api → Settings → Environment Variables**:
 | `DATABASE_URL` | Cadena directa de Neon (paso 2) |
 | `JWT_SECRET` | Valor aleatorio de al menos 32 caracteres |
 | `ORG_HMAC_SECRET` | **Otro** valor aleatorio de al menos 32 caracteres. **No cambiarlo nunca** después de crear auditorías |
-| `JWT_EXPIRES_IN` | `8h` |
+| `JWT_EXPIRES_IN` | `8h`, exactamente: sin comillas ni espacios |
 | `CORS_ORIGIN` | URL del frontend, sin barra final, p. ej. `https://audita-web.vercel.app`. Se completa en el paso 5 |
 | `TRUST_PROXY` | `1` |
 | `PG_POOL_MAX` | `3` |
@@ -83,7 +88,7 @@ Después haga clic en **Deploy**. Cuando termine, abra `https://audita-api.verce
    - **Project Name:** `audita-web`
    - **Root Directory:** `frontend`
    - **Framework Preset:** *Vite* (se detecta solo)
-3. En **Environment Variables**, agregue `VITE_API_URL` = `https://audita-api.vercel.app/api`, sin barra final.
+3. En **Environment Variables**, agregue `VITE_API_URL` = `https://audita-api.vercel.app/api`, sin barra final, con tipo *Config* (es pública: viaja en el JavaScript del navegador). **Antes** del primer deploy: Vite la incrusta al compilar.
 4. Haga clic en **Deploy**.
 
 `frontend/vercel.json` redirige todas las rutas a `index.html`: así, recargar `/auditorias/5` no da 404.
@@ -91,7 +96,7 @@ Después haga clic en **Deploy**. Cuando termine, abra `https://audita-api.verce
 ## Paso 5 · Conectar el frontend con la API (CORS)
 
 1. Copie la URL final del frontend, p. ej. `https://audita-web.vercel.app`.
-2. En **audita-api → Settings → Environment Variables**, ponga ese valor en `CORS_ORIGIN`. Puede incluir varios orígenes separados por coma.
+2. En **audita-api → Settings → Environment Variables**, ponga ese valor en `CORS_ORIGIN`: solo el dominio, sin ruta (`/login`) ni `/` final. Puede incluir varios orígenes separados por coma.
 3. En **audita-api → Deployments**, abra el último despliegue y elija **⋯ → Redeploy** para que tome la variable.
 
 ## Paso 6 · Crear el administrador
@@ -137,6 +142,8 @@ npm run demo:seed
 | Síntoma | Causa | Solución |
 |---|---|---|
 | `/api/health` da 500 y el log dice «Variables de entorno inválidas» | Falta un secreto, es demasiado corto o los dos secretos son iguales | Revise el paso 3 y vuelva a desplegar |
+| `/api/health` da `FUNCTION_INVOCATION_FAILED` | La API no arrancó; la causa está en *Logs* → clic en la petición → panel inferior (p. ej. `JWT_EXPIRES_IN` con comillas) | Corrija la variable y haga *Redeploy* |
+| El login dice «No se pudo conectar con la API» | El frontend se compiló sin `VITE_API_URL` y apunta a `localhost:3000` | Agregue la variable en el proyecto del frontend y haga *Redeploy* |
 | El navegador muestra un error de CORS | `CORS_ORIGIN` no coincide exactamente con la URL del frontend | Use la URL exacta, con `https://` y sin `/` final; vuelva a desplegar la API |
 | «unsupported startup parameter» en el log | Se está usando la cadena con `-pooler` | Use la cadena directa de Neon |
 | El login responde 429 enseguida | Falta `TRUST_PROXY=1`, y todos los usuarios parecen venir de la misma IP | Agréguela y vuelva a desplegar |

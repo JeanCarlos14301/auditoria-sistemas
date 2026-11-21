@@ -10,7 +10,8 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:reset": "docker compose down -v && docker compose up -d",
-    "admin:create": "tsx src/scripts/createAdmin.ts",
+    "db:init": "tsx src/scripts/initDb.ts",
+    "admin:create":"tsx src/scripts/createAdmin.ts",
     "chain:verify": "tsx src/scripts/verifyChain.ts",
     "test:qa": "tsx src/scripts/run-qa-tests.ts",
     "demo:seed": "tsx src/scripts/demoSeed.ts"
