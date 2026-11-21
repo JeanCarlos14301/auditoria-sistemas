@@ -13,6 +13,7 @@ Planificación, ejecución y cierre de auditorías basadas en **ISO/IEC 27002:20
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel&logoColor=white)
 ![QA](https://img.shields.io/badge/QA-CP--01%E2%80%A6CP--13%20aprobado-2E7D32)
 
 <img src="docs/capturas/03b-dashboard-resultado-cerrada.png" alt="Acta de una auditoría cerrada en AuditA" width="900">
@@ -32,10 +33,11 @@ Planificación, ejecución y cierre de auditorías basadas en **ISO/IEC 27002:20
 7. [Seguridad](#seguridad)
 8. [Integridad forense (Hash Chain)](#integridad-forense-hash-chain)
 9. [Puesta en marcha](#puesta-en-marcha)
-10. [Calidad y pruebas](#calidad-y-pruebas)
-11. [Estructura del repositorio](#estructura-del-repositorio)
-12. [API](#api)
-13. [Documentación](#documentación)
+10. [Despliegue](#despliegue)
+11. [Calidad y pruebas](#calidad-y-pruebas)
+12. [Estructura del repositorio](#estructura-del-repositorio)
+13. [API](#api)
+14. [Documentación](#documentación)
 
 ---
 
@@ -100,6 +102,7 @@ Las 27 capturas, organizadas por requisito, están en **[docs/EVIDENCIAS.md](doc
 | | `node:crypto` | SHA-256, HMAC-SHA256 y comparación en tiempo constante |
 | **Datos** | PostgreSQL 16 (`pg`) | Constraints, triggers de inmutabilidad y advisory locks |
 | **Infraestructura** | Docker Compose | Base de datos local reproducible |
+| | Vercel (Functions y sitio estático) y Neon | Despliegue en la nube con PostgreSQL persistente |
 | **Calidad** | Suite QA HTTP (CP-01 a CP-13) y Vitest | 74 verificaciones de punta a punta y 29 pruebas unitarias |
 
 ## Arquitectura
@@ -220,11 +223,37 @@ npm run dev                 # http://localhost:5173
 
 **Usuarios de desarrollo:** `admin@auditsys.co` y `auditor@auditsys.co`. Sus contraseñas están en `backend/.env` (`SEED_ADMIN_PASSWORD` y `SEED_AUDITOR_PASSWORD`).
 
-### Despliegue en la nube
+## Despliegue
 
-Todo el sistema se despliega en **Vercel**: el frontend como sitio estático, la API Express como Vercel Function y PostgreSQL persistente de Neon, creado desde la pestaña *Storage* de Vercel. La guía paso a paso, con la alternativa Neon + Render + Vercel, está en **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
+Todo el sistema se despliega en **Vercel** desde este repositorio, como dos proyectos y una base de datos. Cada `git push` a `main` vuelve a desplegar los dos proyectos.
 
-> **Producción:** use secretos propios para `JWT_SECRET` y `ORG_HMAC_SECRET`, con `NODE_ENV=production` (desactiva los usuarios de desarrollo) y `TRUST_PROXY=1` detrás de un proxy. `ORG_HMAC_SECRET` no debe cambiarse una vez existan auditorías: invalidaría todas las cadenas.
+```mermaid
+flowchart LR
+    U[Navegador] --> W["audita-web<br/>Vercel · sitio estático<br/>(frontend/)"]
+    W -->|VITE_API_URL| A["audita-api<br/>Vercel Function · Express<br/>(backend/)"]
+    A -->|DATABASE_URL · SSL| D[("PostgreSQL 16<br/>Neon · Vercel Storage<br/>persistente")]
+```
+
+| Proyecto | Root Directory | Configuración |
+|---|---|---|
+| `audita-api` | `backend` | [`backend/vercel.json`](backend/vercel.json): compila con `tsc` y atiende todas las rutas con [`api/index.js`](backend/api/index.js) |
+| `audita-web` | `frontend` | [`frontend/vercel.json`](frontend/vercel.json): preset Vite y rewrite a `index.html` para las rutas de la SPA |
+| Base de datos | — | Neon (Postgres) desde *Storage*. El esquema se crea una vez con `sql/init_auditsys.sql` |
+
+**Variables de producción de la API**
+
+| Variable | Valor |
+|---|---|
+| `NODE_ENV` | `production` (desactiva los usuarios de desarrollo y `demo:seed`) |
+| `DATABASE_URL` | Cadena **directa** de Neon (sin `-pooler`) |
+| `JWT_SECRET` / `ORG_HMAC_SECRET` | Dos secretos aleatorios distintos (≥ 32 caracteres). **`ORG_HMAC_SECRET` no se cambia nunca**: invalidaría todas las cadenas |
+| `CORS_ORIGIN` | URL del frontend, p. ej. `https://audita-web.vercel.app` |
+| `TRUST_PROXY` | `1`: el rate limit ve la IP real detrás del proxy de Vercel |
+| `PG_POOL_MAX` | `3`: pocas conexiones por instancia serverless |
+
+En el frontend solo hace falta `VITE_API_URL=https://audita-api.vercel.app/api`.
+
+La guía completa (crear la base, ejecutar el SQL, crear el administrador, datos de demo y solución de problemas), con la alternativa **Neon + Render + Vercel**, está en **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
 
 ## Calidad y pruebas
 
@@ -251,6 +280,7 @@ Todo el sistema se despliega en **Vercel**: el frontend como sitio estático, la
 ```
 auditoria-sistemas/
 ├── backend/                  API REST
+│   ├── api/                  Entrada de la Vercel Function
 │   ├── sql/                  DDL, triggers y catálogo ISO/IEC 27002:2022
 │   ├── src/
 │   │   ├── config/           Validación de entorno
@@ -263,6 +293,7 @@ auditoria-sistemas/
 │   │   ├── routes/           Endpoints
 │   │   └── scripts/          QA, demo, verificación forense y administración
 │   ├── docker-compose.yml
+│   ├── vercel.json           Configuración de despliegue de la API
 │   └── API.md                Contrato de la API
 ├── frontend/                 SPA React
 │   └── src/
